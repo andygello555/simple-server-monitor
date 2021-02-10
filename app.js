@@ -1,12 +1,16 @@
+// DEBUG=simple-server-monitor:* npm start
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
+var { CronJob } = require('cron');
 
 var indexRouter = require('./routes/index');
 var processesRouter = require('./routes/processes');
+var processModel = require('./models/process')
 
 var app = express();
 
@@ -29,6 +33,14 @@ console.log('Connecting to:', mongoDB);
 mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+// Empty all collections
+processModel.deleteMany({})
+
+// Initialise all cronjobs
+var { cronProcesses } = require('./public/js/tasks/processes')
+var processJob = new CronJob('*/15 * * * * *', cronProcesses, null, true, 'Europe/London')
+processJob.start()
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

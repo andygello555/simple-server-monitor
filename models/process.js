@@ -8,16 +8,21 @@ const percentValidator = {
 
 // Defines a snapshot of the process status in time
 const ProcessHistorySchema = new Schema({
-  time: Date,
+  time: {
+    type: Date,
+    default: Date.now,
+  },
   memPercent: {
     type: Number,
     min: percentValidator.min,
     max: percentValidator.max,
+    default: 0.0,
   },
   cpuPercent: {
     type: Number,
     min: percentValidator.min,
     max: percentValidator.max,
+    default: 0.0,
   },
   running: {
     type: Boolean,
@@ -58,6 +63,31 @@ ProcessSchema.methods.latestHistory = function(cb) {
   return Math.max.apply(null, this.history.map(function(e) {
     return e.time
   }))
+}
+
+/**
+ * Adds a new history instance
+ * @param {*} processHistory 
+ */
+ProcessSchema.methods.addHistory = function(processHistory) {
+  this.history.push(processHistory)
+  this.save(function (err) {
+    if (err) return handleError(err)
+  })
+}
+
+/**
+ * Add a new history instance with the running flag not set.
+ * In other words mark the process as not running
+ * 
+ * Will check if the Process is already stopped
+ */
+ProcessSchema.methods.stop = function() {
+  if (this.latestHistory().running) {
+    this.addHistory({
+      running: false
+    })
+  }
 }
 
 module.exports = mongoose.model('Process', ProcessSchema);
