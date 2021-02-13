@@ -1,6 +1,6 @@
 window.onload = () => {
   var chart = new ProcessMemoryUsageChart()
-  setInterval(() => { chart.update() }, 10 * 1000)
+  setInterval(() => { chart.update() }, 15 * 1000)
 }
 
 class ProcessMemoryUsageChart {
@@ -42,7 +42,7 @@ class ProcessMemoryUsageChart {
       var time = this.chart.options.scales.xAxes[0].ticks
       var timeDiff = moment(time.max).diff(moment(time.min), 's')
 
-      for (var i = 0; i <= timeDiff; i+=10) {
+      for (var i = 0; i <= timeDiff; i+=15) {
         var _label = moment(time.min).add(i, 's').format('YYYY-MM-DD HH:mm:ss');
         this.labels.push(_label)
       }
@@ -82,6 +82,13 @@ class ProcessMemoryUsageChart {
         responsive: true,
         scales: {
           xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Time'
+            },
+            gridLines: {
+              display: false
+            },
             type: 'time',
             time: {
               parser: 'YYYY-MM-DD HH:mm:ss',
@@ -96,6 +103,15 @@ class ProcessMemoryUsageChart {
               max: ''
             }
           }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Memory Usage (%)'
+            },
+            gridLines: {
+              display: false
+            },
+          }]
         },
         title: {
           display: true,
