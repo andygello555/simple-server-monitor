@@ -49,31 +49,30 @@ const ProcessSchema = new Schema(
 // Instance methods
 /**
  * Checks whether the process is running by finding the latest history within the document and checking its 'running' field
- * @param {*} cb callback
  */
-ProcessSchema.methods.isRunning = function(cb) {
+ProcessSchema.methods.isRunning = function() {
   return this.latestHistory().running
 }
 
 /**
  * Gets the latest history within the document
- * @param {*} cb callback
  */
-ProcessSchema.methods.latestHistory = function(cb) {
-  return Math.max.apply(null, this.history.map(function(e) {
-    return e.time
-  }))
+ProcessSchema.methods.latestHistory = function() {
+  return this.history.reduce((a, b) => a.time > b.time ? a : b)
 }
 
 /**
  * Adds a new history instance
- * @param {*} processHistory 
+ * @param {*} processHistory the ProcessHistory object to add
+ * @param {Boolean} save whether or not to save the model
  */
-ProcessSchema.methods.addHistory = function(processHistory) {
+ProcessSchema.methods.addHistory = function(processHistory, save = true) {
   this.history.push(processHistory)
-  this.save(function (err) {
-    if (err) return handleError(err)
-  })
+  if (save) {
+    this.save(err => {
+      if (err) console.log(err)
+    })
+  }
 }
 
 /**
@@ -81,13 +80,43 @@ ProcessSchema.methods.addHistory = function(processHistory) {
  * In other words mark the process as not running
  * 
  * Will check if the Process is already stopped
+ * @param {Boolean} save whether or not to save the model
+ * @returns true if the process was marked as stopped, false otherwise
  */
-ProcessSchema.methods.stop = function() {
-  if (this.latestHistory().running) {
+ProcessSchema.methods.stop = function(save = true) {
+  if (this.isRunning()) {
     this.addHistory({
       running: false
-    })
+    }, save)
+    return true
   }
+  return false
+}
+
+/**
+ * Removes the given amount of histories from the head of the list
+ * 
+ * Only if there are more histories than the given amount to remove
+ * @param {int} amount the amount of histories to remove
+ * @param {Boolean} save whether or not to save the model
+ */
+ProcessSchema.methods.removeHistories = function(amount, save = true) {
+  if (this.history.length > amount) {
+    this.history.splice(0, amount)
+    if (save) {
+      this.save(err => {
+        if (err) console.log(err)
+      })
+    }
+  }
+}
+
+/**
+ * Checks if the latest history is greater than a given number of seconds
+ * @param {int} staleSecs the number of seconds to check whether or not the latest history is greater than
+ */
+ProcessSchema.methods.checkStale = function(staleSecs = 30) {
+  return ((new Date().getTime() - this.latestHistory().time.getTime()) / 1000) > staleSecs
 }
 
 module.exports = mongoose.model('Process', ProcessSchema);

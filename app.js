@@ -25,7 +25,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', processesRouter);
+app.use('/processes', processesRouter);
 
 // Setup database connection
 var mongoDB = 'mongodb://127.0.0.1/simple-monitor';
@@ -35,7 +35,9 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 // Empty all collections
-processModel.deleteMany({})
+processModel.deleteMany({}, null, (err) => {
+  if (err) console.log(err)
+})
 
 // Initialise all cronjobs
 var { cronProcesses } = require('./public/js/tasks/processes')
