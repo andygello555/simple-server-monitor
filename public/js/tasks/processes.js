@@ -1,14 +1,10 @@
 const { spawn } = require('child_process');
 const Process = require('../../../models/process')
+const constants = require('../../constants')
 
-const PS_HEADERS = ['pid', 'user', '%mem', '%cpu', 'command']
-// Command will print out currently running processes along with CPU and MEM usage. Excludes 
-// header line, 'ps' process and 'head' process
-const PS_COMMAND = ['sh', ['-c', `ps -o ${PS_HEADERS.join(',')} ax | head -n -4 | tail -n +2`]]
-const MAX_HISTORIES = 2
 
 const cronProcesses = async () => {
-  const ps = spawn(...PS_COMMAND)
+  const ps = spawn(...constants.COMMANDS.PS)
 
   // Finds all the processes that haven't been scraped from 'ps' command
   // Process.find({
@@ -60,10 +56,10 @@ const cronProcesses = async () => {
       let tokens = line.split(/\s+/)
       let i = 0, deficit = 0
 
-      while (i - deficit < PS_HEADERS.length && tokens.length) {
+      while (i - deficit < constants.PS_HEADERS.length && tokens.length) {
         let token = tokens.shift()
         if (token) {
-          switch (PS_HEADERS[i - deficit]) {
+          switch (constants.PS_HEADERS[i - deficit]) {
             case '%mem':
               process_history['memPercent'] = parseFloat(token)
               break;
@@ -72,11 +68,11 @@ const cronProcesses = async () => {
               break;
             default:
               // Check if current line is the first header line, if so skip
-              if (token === PS_HEADERS[i - deficit].toUpperCase()) {
+              if (token === constants.PS_HEADERS[i - deficit].toUpperCase()) {
                 counters.rejected++
                 continue
               } else {
-                process[PS_HEADERS[i - deficit]] = token
+                process[constants.PS_HEADERS[i - deficit]] = token
               }
               break;
           }
@@ -92,7 +88,7 @@ const cronProcesses = async () => {
         process.command += tokens.join(' ')
 
       // Skip if all the required attributes have not been scraped
-      if (Object.keys(process).length + Object.keys(process_history).length !== PS_HEADERS.length) {
+      if (Object.keys(process).length + Object.keys(process_history).length !== constants.PS_HEADERS.length) {
         counters.rejected++
         continue
       }
@@ -120,7 +116,7 @@ const cronProcesses = async () => {
           if (p.command === process.command) {
             // Add a new history if the commands are the same
             p.addHistory(process_history, false)
-            p.removeHistories(MAX_HISTORIES, false)
+            p.removeHistories(constants.MAX_HISTORIES, false)
             counters.added++
             // console.log(`${p.command} === ${process.command}, adding history -> ${process.pid}:`, process_history)
             done = true

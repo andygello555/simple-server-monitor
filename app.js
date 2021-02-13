@@ -7,6 +7,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
 var { CronJob } = require('cron');
+const constants = require('./public/constants')
 
 var indexRouter = require('./routes/index');
 var processesRouter = require('./routes/processes');
@@ -41,7 +42,7 @@ processModel.deleteMany({}, null, (err) => {
 
 // Initialise all cronjobs
 var { cronProcesses } = require('./public/js/tasks/processes')
-var processJob = new CronJob('*/15 * * * * *', cronProcesses, null, true, 'Europe/London')
+var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
 processJob.start()
 
 // catch 404 and forward to error handler

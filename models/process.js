@@ -102,7 +102,7 @@ ProcessSchema.methods.stop = function(save = true) {
  */
 ProcessSchema.methods.removeHistories = function(amount, save = true) {
   if (this.history.length > amount) {
-    this.history.splice(0, amount)
+    this.history.splice(0, this.history.length - amount)
     if (save) {
       this.save(err => {
         if (err) console.log(err)
