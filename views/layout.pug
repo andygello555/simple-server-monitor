@@ -1,10 +1,99 @@
 doctype html
 html
   head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-    script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
-    script(src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js")
-    script(src="/Chart.min.js")
+    title simple-monitor
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    link(rel='stylesheet', href='/stylesheets/bulma.min.css')
+    link(rel='stylesheet', href='/stylesheets/all.min.css')
+    script(src="/dist/axios.min.js")
+    script(src="/dist/moment.min.js")
+    script(src="/dist/Chart.min.js")
+    script(src="/dist/countUp.umd.js")
+    script(src="/dist/typed.min.js")
+    script var exports = {};
+    script(src="/constants.js")
+
+    //- Defining a custom function that extends window.onload: https://stackoverflow.com/questions/16683176/add-two-functions-to-window-onload
+    script.
+      var addFunctionOnWindowLoad = function(callback){
+        if (window.addEventListener) {
+          window.addEventListener('load', callback, false);
+        } else {
+          window.attachEvent('onload', callback);
+        }
+      }
+    
+    //- Changes the currently active menu item
+    script.
+      var currentlyActiveMenuId = '';
+      var getMenuItemFromPath = function() {
+        var path = window.location.pathname
+        switch(path) {
+          default:
+          case '/':
+            currentlyActiveMenuId = 'dashboard'
+            break
+          case '/process':
+            currentlyActiveMenuId = 'processes'
+            break
+          case '/partitions':
+          case '/systemd':
+            currentlyActiveMenuId = path.replace('/', ' ')
+            break
+        }
+        //- console.log(`Currently on ${path} at ${currentlyActiveMenuId}`)
+      }
+
+      var updateMenu = function(currentItem, newItem) {
+        var oldEl = document.getElementById('menu-' + currentItem)
+        var newEl = document.getElementById('menu-' + newItem)
+        //- console.log(`current: ${currentItem} - ${oldEl}, new: ${newItem} - ${newEl}`)
+
+        //- Remove is-active class from old menu item and add it to new menu item
+        oldEl.className = oldEl.className.replace(/\bis-active\b/g, "");
+
+        var name, arr
+        name = "is-active";
+        arr = newEl.className.split(" ");
+        if (arr.indexOf(name) == -1) {
+          newEl.className += " " + name;
+        }
+      }
+
+      addFunctionOnWindowLoad(() => {
+        getMenuItemFromPath()
+        updateMenu(currentlyActiveMenuId, currentlyActiveMenuId)
+      })
+    
+    //- Define a goto function to jump around pages
+    script.
+      var goto = function(url) {
+        //- console.log(`Going to ${url}`)
+        var currentItem = currentlyActiveMenuId
+        window.location.replace(url);
+        getMenuItemFromPath()
+        var newItem = currentlyActiveMenuId
+        updateMenu(current, newItem)
+      }
   body
-    block content
+    nav.navbar.hero.is-link(role="navigation", aria-label="main navigation")
+      .navbar-brand
+        a.navbar-item
+          p.title.is-2.py-2 simp-mon
+    section.section
+      .container.is-fluid
+        .columns.is-4.is-variable
+          .column.is-one-fifth
+            aside.menu
+              ul.menu-list
+                li
+                  a#menu-dashboard(onclick="goto('/')") Dashboard
+                li
+                  a#menu-processes(onclick="goto('/process')") Processes
+                li
+                  a#menu-partitions(onclick="goto('/partitions')") Partitions
+                li
+                  a#menu-systemd(onclick="goto('/systemd')") Systemd
+          .column
+            block content

@@ -1,7 +1,42 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
   include mixins/process_memory_chart
-  +process_memory_chart(1)
+  include mixins/process_total
+  include mixins/process_top_3
+  .tile.is-ancestor
+    .tile.is-child.notification.is-link.has-text-centered
+      strong Processes
+  .tile.is-ancestor
+    .tile.is-vertical.is-8
+      .tile.is-parent
+        .tile.is-child.card
+          +process_memory_chart(1)
+    .tile.is-parent.is-vertical
+      .tile.is-child.card
+        +process_total(1)
+      .tile.is-child.card
+        +process_top_3(1)
+  .tile.is-ancestor
+    .tile.is-child.notification.is-link.has-text-centered
+      strong Partitions
+  .tile.is-ancestor
+    .tile.is-parent.is-vertical
+      .tile.is-child.card
+        header.card-header
+          p.card-header-title Hello world
+        .card-content
+          p Blah blah blah
+      .tile.is-child.card
+        header.card-header
+          p.card-header-title Hello world
+        .card-content
+          p Blah blah blah
+    .tile.is-vertical.is-8
+      .tile.is-parent
+        .tile.is-child.card
+          header.card-header
+            p.card-header-title Hello world
+          .card-content
+            p Blah blah blah
+

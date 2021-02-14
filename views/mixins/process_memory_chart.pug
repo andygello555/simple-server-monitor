@@ -1,3 +1,7 @@
 mixin process_memory_chart(no) 
   script(src="/js/charts/processMemoryUsage.js")
-  canvas#process-memory-chart
+  header.card-header
+    p.card-header-title Process Memory Usage
+  .card-content
+    figure.image
+      canvas#process-memory-chart

@@ -29,6 +29,10 @@ router.get('/', async function(req, res, next) {
     query.select('-__v')
   }
 
+  if (req.query.limit) {
+    query = query.limit(req.query.limit * 1)
+  }
+
   const processes = await query
 
   res.status(200).json({

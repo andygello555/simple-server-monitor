@@ -1,7 +1,7 @@
-window.onload = () => {
+addFunctionOnWindowLoad(() => {
   var chart = new ProcessMemoryUsageChart()
-  setInterval(() => { chart.update() }, 15 * 1000)
-}
+  setInterval(() => { chart.update() }, exports.UPDATES.CHARTS.PROCESSES * 1000)
+})
 
 class ProcessMemoryUsageChart {
   constructor() {
@@ -21,7 +21,7 @@ class ProcessMemoryUsageChart {
 
   getData() {
     // Get the process data from the endpoint
-    return axios.get('/processes?sort=-history.memPercent&fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=1').then(res => {
+    return axios.get(exports.ROUTES.PROCESSES.MEM).then(res => {
       this.parseData(res.data)
     }).catch(error => {
       console.log(error)
@@ -42,7 +42,7 @@ class ProcessMemoryUsageChart {
       var time = this.chart.options.scales.xAxes[0].ticks
       var timeDiff = moment(time.max).diff(moment(time.min), 's')
 
-      for (var i = 0; i <= timeDiff; i+=15) {
+      for (var i = 0; i <= timeDiff; i+=exports.UPDATES.CHARTS.PROCESSES) {
         var _label = moment(time.min).add(i, 's').format('YYYY-MM-DD HH:mm:ss');
         this.labels.push(_label)
       }
@@ -114,11 +114,16 @@ class ProcessMemoryUsageChart {
           }]
         },
         title: {
-          display: true,
+          display: false,
           text: "Process memory usage"
         },
         legend: {
           display: true,
+          labels: {
+            filter: function(item, data) {
+              return item.datasetIndex < 10
+            }
+          }
         }
       }
     })

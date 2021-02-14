@@ -1,0 +1,26 @@
+mixin process_top_3(no)
+  script(src="/js/charts/processTop3.js")
+  header.card-header
+    p.card-header-title Top 3 processes by % Memory Usage
+  .card-content
+    .container
+      table.table.is-striped
+        thead
+          tr
+            th
+              abbr(title='Position') Pos
+            th
+              abbr(title='Command') CMD
+        tbody
+          tr
+            th 1
+            td
+              p#process-no-1
+          tr
+            th 2
+            td
+              p#process-no-2
+          tr
+            th 3
+            td
+              p#process-no-3
