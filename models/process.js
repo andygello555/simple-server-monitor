@@ -1,10 +1,8 @@
 var mongoose = require("mongoose");
+const constants = require("../public/constants")
 var Schema = mongoose.Schema;
 
-const percentValidator = {
-  min: [0, 'Percentage usage cannot be below 0'],
-  max: [100, 'Percentage usage cannot exceed 100'],
-}
+const percentValidator = constants.PERCENT_VALIDATOR
 
 // Defines a snapshot of the process status in time
 const ProcessHistorySchema = new Schema({
@@ -47,6 +45,7 @@ const ProcessSchema = new Schema(
 )
 
 // Instance methods
+
 /**
  * Checks whether the process is running by finding the latest history within the document and checking its 'running' field
  */

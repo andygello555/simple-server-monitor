@@ -9,9 +9,13 @@ var mongoose = require('mongoose');
 var { CronJob } = require('cron');
 const constants = require('./public/constants')
 
+// Routers
 var indexRouter = require('./routes/index');
 var processesRouter = require('./routes/processes');
+
+// Models
 var processModel = require('./models/process')
+var partitionModel = require('./models/partition')
 
 var app = express();
 
@@ -39,11 +43,19 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 processModel.deleteMany({}, null, (err) => {
   if (err) console.log(err)
 })
+partitionModel.deleteMany({}, null, (err) => {
+  if (err) console.log(err)
+})
 
 // Initialise all cronjobs
 var { cronProcesses } = require('./public/js/tasks/processes')
-var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
-processJob.start()
+var { cronPartitions } = require('./public/js/tasks/partitions')
+
+// var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
+var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, false, 'Europe/London')
+
+// processJob.start()
+partitionJob.start()
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
