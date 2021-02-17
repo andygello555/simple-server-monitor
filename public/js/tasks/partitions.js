@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const { exec } = require('child_process');
 const constants = require('../../constants')
+const Partition = require('../../../models/partition')
 const util = require('util');
 
 /**
@@ -49,12 +50,15 @@ const runDu = (partition) => {
           }
         }
 
-        partition.directories.push(partition_root_dir)
+        partition.rootDirectories.push(partition_root_dir)
       }
 
-      console.log(partition)
+      console.log('\n', partition)
 
       // Retrieve and update old partition if it exists otherwise create a new one
+      Partition.updateOne({ filesystem: partition.filesystem, mounted: partition.mounted }, partition, { upsert: true }, err => {
+        if (err) console.log(err)
+      })
       resolve(true)
     })
   })
@@ -73,6 +77,8 @@ const cronPartitions = () => {
     }
 
     console.log('\nStarting partition update:')
+
+    let scraped = []
 
     for (let line of stdout.toString().split('\n')) {
       // Skip empty lines
@@ -106,11 +112,20 @@ const cronPartitions = () => {
       // Get the partitions root directory sizes which is done asynchronously
       // Skip the partitions that are in constants.SKIP_DIRECTORIES
       if (constants.SKIP_DIRECTORIES.indexOf(partition.mounted) > -1) {
+        console.log(`\tSkipping "${partition.mounted}"...`)
+      } else {
+        scraped.push({
+          '$and': [
+            {'filesystem': partition.filesystem},
+            {'mounted': process.mounted}
+          ]
+        })
         console.log(`\tGetting info of roots at ${partition.mounted}`)
         runDu(partition)
-      } else {
-        console.log(`\tSkipping ${partition.mounted}...`)
       }
+
+      // Delete non-scraped/skipped partitions
+      Partition.deleteMany({ '$nor': scraped })
     }
   })
 }

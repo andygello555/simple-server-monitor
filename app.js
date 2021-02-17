@@ -12,6 +12,7 @@ const constants = require('./public/constants')
 // Routers
 var indexRouter = require('./routes/index');
 var processesRouter = require('./routes/processes');
+var partitionsRouter = require('./routes/partitions');
 
 // Models
 var processModel = require('./models/process')
@@ -31,6 +32,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/processes', processesRouter);
+app.use('/partitions', partitionsRouter);
 
 // Setup database connection
 var mongoDB = 'mongodb://127.0.0.1/simple-monitor';
@@ -51,11 +53,10 @@ partitionModel.deleteMany({}, null, (err) => {
 var { cronProcesses } = require('./public/js/tasks/processes')
 var { cronPartitions } = require('./public/js/tasks/partitions')
 
-// var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
-var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, false, 'Europe/London')
-
-// processJob.start()
-partitionJob.start()
+cronProcesses()
+cronPartitions()
+var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
+var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

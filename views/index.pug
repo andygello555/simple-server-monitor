@@ -3,7 +3,11 @@ extends layout
 block content
   include mixins/process_memory_chart
   include mixins/process_total
-  include mixins/process_top_3
+  include mixins/process_top_3_mem
+  include mixins/process_cpu_chart
+  include mixins/process_top_3_cpu
+  include mixins/partition_pie
+  include mixins/partition_list
   .tile.is-ancestor
     .tile.is-child.notification.is-link.has-text-centered
       strong Processes
@@ -16,27 +20,28 @@ block content
       .tile.is-child.card
         +process_total(1)
       .tile.is-child.card
-        +process_top_3(1)
+        +process_top_3_mem(1)
+  .tile.is-ancestor
+    .tile.is-parent.is-vertical
+      .tile.is-child.card
+        header.card-header
+          p.card-header-title Top 3 processes by % CPU Usage
+        .card-content Hello world!
+    .tile.is-vertical.is-8
+      .tile.is-parent
+        .tile.is-child.card
+          header.card-header
+            p.card-header-title Process CPU Usage
+          .card-content Hello world!
   .tile.is-ancestor
     .tile.is-child.notification.is-link.has-text-centered
       strong Partitions
   .tile.is-ancestor
     .tile.is-parent.is-vertical
-      .tile.is-child.card
-        header.card-header
-          p.card-header-title Hello world
-        .card-content
-          p Blah blah blah
-      .tile.is-child.card
-        header.card-header
-          p.card-header-title Hello world
-        .card-content
-          p Blah blah blah
-    .tile.is-vertical.is-8
       .tile.is-parent
         .tile.is-child.card
-          header.card-header
-            p.card-header-title Hello world
-          .card-content
-            p Blah blah blah
-
+          +partition_pie(1)
+    .tile.is-vertical.is-5
+      .tile.is-parent
+        .tile.is-child.card
+          +partition_list(1)

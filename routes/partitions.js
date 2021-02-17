@@ -1,10 +1,10 @@
 var express = require('express');
-const Process = require('../models/process')
+const Partition = require('../models/partition')
 var router = express.Router();
 
-/* GET processes. */
+/* GET partitions */
 router.get('/', async function(req, res, next) {
-  // Get the required processes using the query parameters
+  // Get the required partitions using the query parameters
   const queryObj = { ...req.query }
   const excludedFields = ['page', 'sort', 'limit', 'fields']
   excludedFields.forEach(el => delete queryObj[el])
@@ -16,7 +16,7 @@ router.get('/', async function(req, res, next) {
     match => `$${match}`
   )
 
-  let query = Process.find(JSON.parse(queryStr))
+  let query = Partition.find(JSON.parse(queryStr))
 
   // Handle sorting
   if (req.query.sort) {
@@ -38,13 +38,13 @@ router.get('/', async function(req, res, next) {
   }
 
   // Await and return the query
-  const processes = await query
+  const partitions = await query
 
   res.status(200).json({
     status: 'success',
-    results: processes.length,
-    data: { processes }
+    results: partitions.length,
+    data: { partitions }
   })
-});
+})
 
-module.exports = router;
+module.exports = router

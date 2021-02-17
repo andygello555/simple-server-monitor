@@ -1,4 +1,5 @@
 var mongoose = require("mongoose");
+const constants = require('../public/constants')
 var Schema = mongoose.Schema;
 
 const SIZE_MIN = [0, 'Size cannot be below 0']
@@ -46,4 +47,4 @@ const PartitionSchema = new Schema({
   rootDirectories: [PartitionRootDirectory],
 })
 
-module.exports = mongoose.Model('Partition', PartitionSchema)
+module.exports = mongoose.model('Partition', PartitionSchema)

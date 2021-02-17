@@ -1,0 +1,25 @@
+mixin process_top_3_cpu(no)
+  header.card-header
+    p.card-header-title Top 3 processes by % CPU Usage
+  .card-content Hello world!
+    .container
+      table.table.is-striped
+        thead
+          tr
+            th
+              abbr(title='Position') Pos
+            th
+              abbr(title='Command') CMD
+        tbody
+          tr
+            th 1
+            td
+              p#process-cpu-no-1
+          tr
+            th 2
+            td
+              p#process-cpu-no-2
+          tr
+            th 3
+            td
+              p#process-cpu-no-3

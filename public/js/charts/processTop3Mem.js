@@ -46,7 +46,7 @@ class ProcessTop3 {
     for (var i=0; i<3; i++) {
       if (this.oldTop3[i] !== this.newTop3[i]) {
         console.log(`Changing top process no. ${i + 1}: ${this.oldTop3[i]} => ${this.newTop3[i]}`)
-        var typed = new Typed(`#process-no-${i + 1}`, {
+        var typed = new Typed(`#process-mem-no-${i + 1}`, {
           strings: [this.oldTop3[i], this.newTop3[i]],
           smartBackspace: true,
           showCursor: false

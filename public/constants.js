@@ -38,17 +38,21 @@ define('ROUTES', {
     MEM: '/processes?sort=-history.memPercent&fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=1',
     RUNNING: '/processes?fields=pid&sort=-history.time&history.running=true',
     MEM_TOP3: '/processes?fields=pid,command&history.running=true&sort=-history.memPercent&limit=3'
+  },
+  PARTITIONS: {
+    PIE: '/partitions?sort=mounted'
   }
 })
 
 // Defines the update times used for cronjobs as well as frontend setInterval times
 define('UPDATES', {
   CRONS: {
-    PROCESSES: '*/15 * * * * *',
-    PARTITIONS: '0 */5 * * * *',
+    PROCESSES: '*/15 * * * * *',   // Every 15 seconds
+    PARTITIONS: '0 */30 * * * *',  // Every 30 minutes
   },
   CHARTS: {
-    PROCESSES: 15
+    PROCESSES: 15,
+    PARTITIONS: 240,
   }
 })
 
@@ -58,3 +62,6 @@ define('LEGEND_TOTAL', {
     MEM: 10
   }
 })
+
+// Defines the percent at which the is-danger class should be used
+define('IS_DANGER_PERCENT', 60)

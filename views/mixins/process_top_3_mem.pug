@@ -1,5 +1,5 @@
-mixin process_top_3(no)
-  script(src="/js/charts/processTop3.js")
+mixin process_top_3_mem(no)
+  script(src="/js/charts/processTop3Mem.js")
   header.card-header
     p.card-header-title Top 3 processes by % Memory Usage
   .card-content
@@ -15,12 +15,12 @@ mixin process_top_3(no)
           tr
             th 1
             td
-              p#process-no-1
+              p#process-mem-no-1
           tr
             th 2
             td
-              p#process-no-2
+              p#process-mem-no-2
           tr
             th 3
             td
-              p#process-no-3
+              p#process-mem-no-3
