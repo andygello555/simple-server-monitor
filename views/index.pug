@@ -5,6 +5,7 @@ block content
   include mixins/process_total
   include mixins/process_top_3_mem
   include mixins/process_cpu_chart
+  include mixins/process_cpu_total
   include mixins/process_top_3_cpu
   include mixins/partition_pie
   include mixins/partition_list
@@ -24,15 +25,13 @@ block content
   .tile.is-ancestor
     .tile.is-parent.is-vertical
       .tile.is-child.card
-        header.card-header
-          p.card-header-title Top 3 processes by % CPU Usage
-        .card-content Hello world!
+        +process_top_3_cpu(1)
+      .tile.is-child.card
+        +process_cpu_total(1)
     .tile.is-vertical.is-8
       .tile.is-parent
         .tile.is-child.card
-          header.card-header
-            p.card-header-title Process CPU Usage
-          .card-content Hello world!
+          +process_cpu_chart(1)
   .tile.is-ancestor
     .tile.is-child.notification.is-link.has-text-centered
       strong Partitions

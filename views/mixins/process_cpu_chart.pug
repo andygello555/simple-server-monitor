@@ -1,6 +1,7 @@
 mixin process_cpu_chart(no)
+  script(src="/js/charts/processCPUUsage.js")
   header.card-header
     p.card-header-title Process CPU Usage
-  .card-content Hello world!
+  .card-content
     figure.image
       canvas#process-cpu-chart

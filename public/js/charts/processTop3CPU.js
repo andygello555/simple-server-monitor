@@ -1,8 +1,8 @@
 addFunctionOnWindowLoad(() => {
-  var top3Mem = new ProcessTop3Mem()
+  var top3CPU = new ProcessTop3CPU()
 })
 
-class ProcessTop3Mem extends AbstractChart {
+class ProcessTop3CPU extends AbstractChart {
   constructor() {
     super()
   }
@@ -10,7 +10,7 @@ class ProcessTop3Mem extends AbstractChart {
   init() {
     this.oldTop3 = ['', '', '']
 
-    this.ENDPOINT = exports.ROUTES.PROCESSES.MEM_TOP3
+    this.ENDPOINT = exports.ROUTES.PROCESSES.CPU_TOP3
     this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PROCESSES * 1000
   }
 
@@ -29,7 +29,7 @@ class ProcessTop3Mem extends AbstractChart {
     for (var i=0; i<3; i++) {
       if (this.oldTop3[i] !== this.newTop3[i]) {
         console.log(`Changing top process no. ${i + 1}: ${this.oldTop3[i]} => ${this.newTop3[i]}`)
-        var typed = new Typed(`#process-mem-no-${i + 1}`, {
+        var typed = new Typed(`#process-cpu-no-${i + 1}`, {
           strings: [this.oldTop3[i], this.newTop3[i]],
           smartBackspace: true,
           showCursor: false

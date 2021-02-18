@@ -1,12 +1,10 @@
 addFunctionOnWindowLoad(() => {
   var pie_chart = new PartitionPieChart()
-  setInterval(() => { pie_chart.update() }, exports.UPDATES.CHARTS.PARTITIONS * 1000)
 })
 
-class PartitionPieChart {
+class PartitionPieChart extends AbstractChart {
   constructor() {
-    this.init()
-    this.update()
+    super()
   }
 
   init() {
@@ -22,42 +20,28 @@ class PartitionPieChart {
                        '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
                        '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3', 
                        '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF']
-  }
-
-  update() {
-    // Fetches, parses and then renders the data
-    this.getData().then(() => this.render())
-  }
-
-  getData() {
-    // Get the process data from the endpoint
-    return axios.get(exports.ROUTES.PARTITIONS.PIE).then(res => {
-      this.parseData(res.data)
-    }).catch(error => {
-      console.log(error)
-    }).then(() => { return })
+    this.ENDPOINT = exports.ROUTES.PARTITIONS.PIE
+    this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PARTITIONS * 1000
   }
 
   parseData(data) {
-    // Parse the data so that it can be used within the Chart
-    if (data.status === 'success' && data.results) {
-      this.datasets = data.data.partitions.map(p => {
-        return {
-          data: p.rootDirectories.map(dir => { return dir.size }).concat(p.available),
-          label: p.mounted,
-          labels: p.rootDirectories.map(dir => {
-            if (p.mounted === '/') {
-              return dir.directory
-            }
-            return `${p.mounted}${dir.directory}`
-          }).concat('free'),
-          backgroundColor: this.colorArray.slice(0, p.rootDirectories.length).concat('#27e627')
-        }
-      })
-    } else {
-      console.log(`Uh oh, request returned: ${data.status} with ${data.results} results`)
-      return false
-    }
+    super.parseData(data)
+
+    this.datasets = data.data.partitions.map(p => {
+      return {
+        data: p.rootDirectories.map(dir => { return dir.size }).concat(p.available),
+        label: p.mounted,
+        labels: p.rootDirectories.map(dir => {
+          if (p.mounted === '/') {
+            return dir.directory
+          }
+          return `${p.mounted}${dir.directory}`
+        }).concat('free'),
+        backgroundColor: this.colorArray.slice(0, p.rootDirectories.length).concat('#27e627')
+      }
+    })
+
+    return true
   }
 
   render() {

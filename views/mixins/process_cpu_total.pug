@@ -1,0 +1,16 @@
+mixin process_cpu_total(no)
+  script(src="/js/charts/processCPUTotal.js")
+  header.card-header
+    p.card-header-title Total CPU Usage
+  .card-content
+    section.hero
+      .hero-body
+        .level
+          .level-item.has-text-centered
+            div
+              .level
+                .level-item
+                  p &asymp;
+                  p.title.is-1#process_cpu_total 0
+                  p %
+              p.heading total CPU usage

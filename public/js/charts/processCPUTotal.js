@@ -1,8 +1,8 @@
 addFunctionOnWindowLoad(() => {
-  var total = new ProcessTotal()
+  var process_cpu_total = new ProcessCPUTotal()
 })
 
-class ProcessTotal extends AbstractChart {
+class ProcessCPUTotal extends AbstractChart {
   constructor() {
     super()
   }
@@ -17,17 +17,21 @@ class ProcessTotal extends AbstractChart {
       prefix : '',
       suffix : ''
     }
-    this.countUp = new countUp.CountUp('process_total', this.total);
+    this.countUp = new countUp.CountUp('process_cpu_total', this.total);
     this.countUp.start();
 
-    this.ENDPOINT = exports.ROUTES.PROCESSES.RUNNING
+    this.ENDPOINT = exports.ROUTES.PROCESSES.CPU_USAGE
     this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PROCESSES * 1000
   }
 
   parseData(data) {
     super.parseData(data)
 
-    this.total = data.results
+    this.total = data.data.processes.filter(p => {
+      return p.history[0].cpuPercent > 0 && (moment(p.history[0].time).add(exports.UPDATES.CHARTS.PROCESSES * 4, 'seconds') >= moment() || p.history[0].running)
+    }).map(p => {
+      return p.history[0].cpuPercent
+    }).reduce((a, b) => a + b, 0)
     return true
   }
 

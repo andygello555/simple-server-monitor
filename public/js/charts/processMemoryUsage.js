@@ -1,68 +1,51 @@
 addFunctionOnWindowLoad(() => {
-  var chart = new ProcessMemoryUsageChart()
-  setInterval(() => { chart.update() }, exports.UPDATES.CHARTS.PROCESSES * 1000)
+  var process_memory_chart = new ProcessMemoryUsageChart()
 })
 
-class ProcessMemoryUsageChart {
+class ProcessMemoryUsageChart extends AbstractChart {
   constructor() {
-    this.init()
-    this.update()
+    super()
   }
 
   init() {
     this.chartElement = document.querySelector('#process-memory-chart')
     this.chart = this.createChart()
-  }
 
-  update() {
-    // Fetches, parses and then renders the data
-    this.getData().then(() => this.render())
-  }
-
-  getData() {
-    // Get the process data from the endpoint
-    return axios.get(exports.ROUTES.PROCESSES.MEM).then(res => {
-      this.parseData(res.data)
-    }).catch(error => {
-      console.log(error)
-    }).then(() => { return })
+    this.ENDPOINT = exports.ROUTES.PROCESSES.MEM
+    this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PROCESSES * 1000
   }
 
   parseData(data) {
-    // Parse the data so that it can be used within the Chart
-    if (data.status === 'success' && data.results) {
-      // Get the minimum and maximum time from the list of returned processes
-      this.labels = []
-      var historyTimes = data.data.processes.map(o => o.history.map(h => new Date(h.time))).flat()
-      var pids = data.data.processes.map(o => o.pid).sort((a, b) => a - b)
-      this.chart.options.scales.xAxes[0].ticks.min = new Date(Math.min.apply(Math, historyTimes))
-      this.chart.options.scales.xAxes[0].ticks.max = new Date(Math.max.apply(Math, historyTimes))
+    super.parseData(data)
 
-      // Set minimum and maximum time to be the minimum and maximum time of process history
-      var time = this.chart.options.scales.xAxes[0].ticks
-      var timeDiff = moment(time.max).diff(moment(time.min), 's')
+    // Get the minimum and maximum time from the list of returned processes
+    this.labels = []
+    var historyTimes = data.data.processes.map(o => o.history.map(h => new Date(h.time))).flat()
+    var pids = data.data.processes.map(o => o.pid).sort((a, b) => a - b)
+    this.chart.options.scales.xAxes[0].ticks.min = new Date(Math.min.apply(Math, historyTimes))
+    this.chart.options.scales.xAxes[0].ticks.max = new Date(Math.max.apply(Math, historyTimes))
 
-      for (var i = 0; i <= timeDiff; i+=exports.UPDATES.CHARTS.PROCESSES) {
-        var _label = moment(time.min).add(i, 's').format('YYYY-MM-DD HH:mm:ss');
-        this.labels.push(_label)
-      }
+    // Set minimum and maximum time to be the minimum and maximum time of process history
+    var time = this.chart.options.scales.xAxes[0].ticks
+    var timeDiff = moment(time.max).diff(moment(time.min), 's')
 
-      // Now we parse the processes into datasets
-      this.datasets = data.data.processes.map(p => {
-        return {
-          data: p.history.sort((a,b)=>b.time-a.time).map(e => { return { x: e.time, y: e.memPercent } }),
-          label: `${p.pid}: ${p.command.split(' ')[0].split('/').splice(-1).pop()}`,
-          borderColor: this.colorFromPid(p.pid, pids[0], pids[pids.length - 1]),
-          fill: false,
-          showLine: true
-        }
-      })
-
-      return true
-    } else {
-      console.log(`Uh oh, request returned: ${data.status} with ${data.results} results`)
-      return false
+    for (var i = 0; i <= timeDiff; i+=exports.UPDATES.CHARTS.PROCESSES) {
+      var _label = moment(time.min).add(i, 's').format('YYYY-MM-DD HH:mm:ss');
+      this.labels.push(_label)
     }
+
+    // Now we parse the processes into datasets
+    this.datasets = data.data.processes.map(p => {
+      return {
+        data: p.history.sort((a,b)=>b.time-a.time).map(e => { return { x: e.time, y: e.memPercent } }),
+        label: `${p.pid}: ${p.command.split(' ')[0].split('/').splice(-1).pop()}`,
+        borderColor: this.colorFromPid(p.pid, pids[0], pids[pids.length - 1]),
+        fill: false,
+        showLine: true
+      }
+    })
+
+    return true
   }
 
   render() {
@@ -121,7 +104,7 @@ class ProcessMemoryUsageChart {
           display: true,
           labels: {
             filter: function(item, data) {
-              return item.datasetIndex < 10
+              return item.datasetIndex < exports.LEGEND_TOTAL.PROCESSES.MEM
             }
           }
         }

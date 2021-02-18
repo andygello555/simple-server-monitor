@@ -14,6 +14,14 @@ define("PERCENT_VALIDATOR", {
   max: [100, 'Percentage usage cannot exceed 100'],
 })
 
+// Any processes with a current usage below these thresholds will not be included Charts (such as memory/CPU usage charts)
+define("PERCENT_THRESHOLD", {
+  PROCESSES: {
+    MEM: 1,
+    CPU: 0.5,
+  }
+})
+
 // Partition mount points that can be skipped when checking disk space usage
 define("SKIP_DIRECTORIES", ['/boot/efi'])
 
@@ -35,9 +43,12 @@ define("COMMANDS", {
 // Routes used by frontend to get needed MongoDB docs
 define('ROUTES', {
   PROCESSES: {
-    MEM: '/processes?sort=-history.memPercent&fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=1',
+    MEM: `/processes?sort=-history.memPercent&fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.MEM}`,
+    CPU: `/processes?sort=-history.cpuPercent&fields=pid,command,history.cpuPercent,history.time&history.cpuPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.CPU}`,
     RUNNING: '/processes?fields=pid&sort=-history.time&history.running=true',
-    MEM_TOP3: '/processes?fields=pid,command&history.running=true&sort=-history.memPercent&limit=3'
+    CPU_USAGE: '/processes?sort=-history.time&fields=pid,history.cpuPercent,history.time,history.running',
+    MEM_TOP3: '/processes?fields=pid,command&history.running=true&sort=-history.memPercent&limit=3',
+    CPU_TOP3: '/processes?fields=pid,command&history.running=true&sort=-history.cpuPercent&limit=3',
   },
   PARTITIONS: {
     PIE: '/partitions?sort=mounted'
@@ -59,9 +70,10 @@ define('UPDATES', {
 // Defines the total number of legend labels for each kind of chart
 define('LEGEND_TOTAL', {
   PROCESSES: {
-    MEM: 10
+    MEM: 10,
+    CPU: 10,
   }
 })
 
 // Defines the percent at which the is-danger class should be used
-define('IS_DANGER_PERCENT', 60)
+define('IS_DANGER_PERCENT', 80)

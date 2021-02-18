@@ -1,66 +1,57 @@
 addFunctionOnWindowLoad(() => {
   var list = new PartitionList()
-  setInterval(() => { list.update() }, exports.UPDATES.CHARTS.PARTITIONS * 1000)
 })
 
-class PartitionList {
+class PartitionList extends AbstractChart {
   constructor() {
-    this.init()
-    this.update()
+    super()
   }
 
   init() {
     this.currentPartitions = []
     this.partitionContainer = document.getElementById('partition-list-container')
-  }
 
-  update() {
-    // Fetches, parses and then renders the data
-    this.getData().then(() => this.render())
-  }
-
-  getData() {
-    // Get the process data from the endpoint
-    return axios.get(exports.ROUTES.PARTITIONS.PIE).then(res => {
-      this.parseData(res.data)
-    }).catch(error => {
-      console.log(error)
-    }).then(() => { return })
+    this.ENDPOINT = exports.ROUTES.PARTITIONS.PIE
+    this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PARTITIONS * 1000
   }
 
   parseData(data) {
-    // Parse the data so that it can be used within the Chart
-    if (data.status === 'success' && data.results) {
-      this.newPartitions = []
-      data.data.partitions.forEach((p, i) => {
-        var ringPosition = ''
-        if (i === 0) {
-          ringPosition = '(outmost ring)'
-        } else if (i === data.results - 1) {
-          ringPosition = '(innermost ring)'
-        }
-        var template = `
-        <div class='notification mb-4 ${p.usedPercent > exports.IS_DANGER_PERCENT ? 'is-danger' : 'is-success'}'>
-          <nav class='level'>
-            <div class='level-left'>
-              <div class='level-item'><strong class='title is-5'>${p.filesystem}</strong></div>
-              <div class='level-item is-size-7'>mounted on</div>
-              <div class='level-item'><strong class='title is-5'>${p.mounted}</strong></div>
-              <div class='level-item is-size-7'>${ringPosition}</div>
-            </div>
-            <div class='level-right'>
-              <div class='level-item is-size-6'>${p.usedPercent}%</div>
-            </div>
-          </nav>
-        </div>
-        `
-        this.newPartitions.push(template)
-      })
-      return true
-    } else {
-      console.log(`Uh oh, request returned: ${data.status} with ${data.results} results`)
-      return false
-    }
+    super.parseData(data)
+
+    this.newPartitions = []
+
+    // Populate the list with a notification block for each partition which includes:
+    // - Filesystem
+    // - Colour depending on how much of that partition is used (see constants.IS_DANGER_PERCENT)
+    // - Mounted on
+    // - Ring position, in pie chart (if innermost or outermost)
+    // - Used percentage
+    data.data.partitions.forEach((p, i) => {
+      var ringPosition = ''
+      if (i === 0) {
+        ringPosition = "<div class='level-item is-size-7'>(outmost ring)</div>"
+      } else if (i === data.results - 1) {
+        ringPosition = "<div class='level-item is-size-7'>(innermost ring)</div>"
+      }
+      var template = `
+      <div class='notification mb-4 ${p.usedPercent > exports.IS_DANGER_PERCENT ? 'is-danger' : 'is-success'}'>
+        <nav class='level'>
+          <div class='level-left'>
+            <div class='level-item'><strong class='title is-5'>${p.filesystem}</strong></div>
+            <div class='level-item is-size-7'>mounted on</div>
+            <div class='level-item'><strong class='title is-5'>${p.mounted}</strong></div>
+            ${ringPosition}
+          </div>
+          <div class='level-right'>
+            <div class='level-item is-size-6'>${p.usedPercent}%</div>
+          </div>
+        </nav>
+      </div>
+      `
+      this.newPartitions.push(template)
+    })
+
+    return true
   }
 
   render() {
@@ -87,7 +78,7 @@ class PartitionList {
     // Change the partition list using typing.js
     for (var i=0; i<this.newPartitions.length; i++) {
       if (this.currentPartitions[i] !== this.newPartitions[i]) {
-        console.log(`Changing partition no. ${i}: ${this.currentPartitions[i]} => ${this.newPartitions[i]}`)
+        // console.log(`Changing partition no. ${i}: ${this.currentPartitions[i]} => ${this.newPartitions[i]}`)
         var typed = new Typed(`#partition-no-${i}`, {
           strings: [this.currentPartitions[i], this.newPartitions[i]],
           smartBackspace: true,
@@ -98,4 +89,8 @@ class PartitionList {
     this.currentPartitions = this.newPartitions
   }
 
+  /**
+   * Needs to be overriden, but it's not used in the partition list widget
+   */
+  createChart() { return true }
 }
