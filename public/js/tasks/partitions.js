@@ -1,4 +1,3 @@
-const { spawn } = require('child_process');
 const { exec } = require('child_process');
 const constants = require('../../constants')
 const Partition = require('../../../models/partition')

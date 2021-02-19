@@ -13,6 +13,7 @@ const constants = require('./public/constants')
 var indexRouter = require('./routes/index');
 var processesRouter = require('./routes/processes');
 var partitionsRouter = require('./routes/partitions');
+var logsRouter = require('./routes/log');
 
 // Models
 var processModel = require('./models/process')
@@ -33,6 +34,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/processes', processesRouter);
 app.use('/partitions', partitionsRouter);
+app.use('/logs', logsRouter)
 
 // Setup database connection
 var mongoDB = 'mongodb://127.0.0.1/simple-monitor';
@@ -41,7 +43,7 @@ mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
-// Empty all collections
+// Empty all collections (except logs as those should persist)
 processModel.deleteMany({}, null, (err) => {
   if (err) console.log(err)
 })
@@ -53,10 +55,12 @@ partitionModel.deleteMany({}, null, (err) => {
 var { cronProcesses } = require('./public/js/tasks/processes')
 var { cronPartitions } = require('./public/js/tasks/partitions')
 
-cronProcesses()
-cronPartitions()
-var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
-var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
+// Call jobs first so that they are run on start
+// cronProcesses()
+// cronPartitions()
+
+// var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
+// var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

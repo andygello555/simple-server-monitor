@@ -37,7 +37,8 @@ define("COMMANDS", {
   PS: ['sh', ['-c', `ps -o ${exports.PS_HEADERS.join(',')} ax | head -n -4 | tail -n +2`]],
   DF: 'df -k -x squashfs -x tmpfs -x devtmpfs | tail -n +2',
   GDU: 'gdu -cnx %s',
-  DU: 'du -kx --max-depth=1 %s 2>/dev/null | head -n -1'
+  DU: 'du -kx --max-depth=1 %s 2>/dev/null | head -n -1',
+  CHECK_READABLE: 'test -r -a %s'
 })
 
 // Routes used by frontend to get needed MongoDB docs
@@ -77,3 +78,10 @@ define('LEGEND_TOTAL', {
 
 // Defines the percent at which the is-danger class should be used
 define('IS_DANGER_PERCENT', 80)
+
+// Defaults used within schema attributes
+define('DEFAULTS', {
+  LOGS: {
+    LINES: 100
+  }
+})

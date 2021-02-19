@@ -34,7 +34,7 @@ html
         if (path === '/') {
           currentlyActiveMenuId = 'dashboard'
         } else {
-          currentlyActiveMenuId = path.replace('/', '')
+          currentlyActiveMenuId = path.split('/')[1]
         }
         //- console.log(`Currently on ${path} at ${currentlyActiveMenuId}`)
       }
