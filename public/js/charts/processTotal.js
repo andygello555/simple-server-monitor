@@ -27,7 +27,10 @@ class ProcessTotal extends AbstractChart {
   parseData(data) {
     super.parseData(data)
 
-    this.total = data.results
+    this.total = data.data.processes.filter(p => p.history[p.history.length - 1].running).map(p => {
+      return p.history[0].cpuPercent
+    }).length
+
     return true
   }
 

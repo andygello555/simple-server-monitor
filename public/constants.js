@@ -6,7 +6,7 @@ function define(name, value) {
 }
 
 // Maximum histories that can be stored within a Process document
-define("MAX_HISTORIES", 10)
+define("MAX_HISTORIES", 30)
 
 // Mongoose validator used for percentages
 define("PERCENT_VALIDATOR", {
@@ -45,10 +45,10 @@ define('ROUTES', {
   PROCESSES: {
     MEM: `/processes?sort=-history.memPercent&fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.MEM}`,
     CPU: `/processes?sort=-history.cpuPercent&fields=pid,command,history.cpuPercent,history.time&history.cpuPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.CPU}`,
-    RUNNING: '/processes?fields=pid&sort=-history.time&history.running=true',
-    CPU_USAGE: '/processes?sort=-history.time&fields=pid,history.cpuPercent,history.time,history.running',
-    MEM_TOP3: '/processes?fields=pid,command&history.running=true&sort=-history.memPercent&limit=3',
-    CPU_TOP3: '/processes?fields=pid,command&history.running=true&sort=-history.cpuPercent&limit=3',
+    RUNNING: '/processes?fields=history.cpuPercent,history.time,history.running',
+    CPU_USAGE: '/processes?fields=history.cpuPercent,history.time,history.running',
+    MEM_TOP3: '/processes?fields=pid,command,history.memPercent,history.time,history.running',
+    CPU_TOP3: '/processes?fields=pid,command,history.cpuPercent,history.time,history.running',
   },
   PARTITIONS: {
     PIE: '/partitions?sort=mounted'
@@ -58,11 +58,11 @@ define('ROUTES', {
 // Defines the update times used for cronjobs as well as frontend setInterval times
 define('UPDATES', {
   CRONS: {
-    PROCESSES: '*/15 * * * * *',   // Every 15 seconds
+    PROCESSES: '0 */1 * * * *',   // Every minute
     PARTITIONS: '0 */30 * * * *',  // Every 30 minutes
   },
   CHARTS: {
-    PROCESSES: 15,
+    PROCESSES: 30,
     PARTITIONS: 240,
   }
 })

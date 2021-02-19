@@ -59,7 +59,7 @@ class PartitionList extends AbstractChart {
     if (this.currentPartitions.length !== this.newPartitions.length) {
       // Remove all the child nodes under partitionContainer
       while (this.partitionContainer.firstChild) {
-        myNode.removeChild(this.partitionContainer.lastChild);
+        this.partitionContainer.removeChild(this.partitionContainer.lastChild);
       }
 
       // Then append back empty children to fit the number of partitions in newPartitions 

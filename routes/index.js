@@ -11,4 +11,9 @@ router.get('/process', function(req, res, next) {
   res.render('process')
 })
 
+/* GET log viewer page */
+router.get('/log-viewer', function(req, res, next) {
+  res.render('log_viewer')
+})
+
 module.exports = router;

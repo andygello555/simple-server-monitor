@@ -18,9 +18,17 @@ class ProcessTop3Mem extends AbstractChart {
     super.parseData(data)
 
     this.newTop3 = []
-    for (var p of data.data.processes) {
+
+    data.data.processes.filter(p => p.history[p.history.length - 1].running).map(p => {
+      return {
+        pid: p.pid,
+        command: p.command,
+        latest: p.history[p.history.length - 1]
+      }
+    }).sort((a, b) => b.latest.memPercent - a.latest.memPercent).slice(0, 3).forEach(p => {
       this.newTop3.push(p.command.split(' ')[0].split('/').splice(-1).pop())
-    }
+    })
+
     return true
   }
 

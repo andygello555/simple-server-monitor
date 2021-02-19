@@ -27,11 +27,10 @@ class ProcessCPUTotal extends AbstractChart {
   parseData(data) {
     super.parseData(data)
 
-    this.total = data.data.processes.filter(p => {
-      return p.history[0].cpuPercent > 0 && (moment(p.history[0].time).add(exports.UPDATES.CHARTS.PROCESSES * 4, 'seconds') >= moment() || p.history[0].running)
-    }).map(p => {
+    this.total = data.data.processes.filter(p => p.history[p.history.length - 1].running).map(p => {
       return p.history[0].cpuPercent
     }).reduce((a, b) => a + b, 0)
+
     return true
   }
 

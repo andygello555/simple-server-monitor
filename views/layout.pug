@@ -30,18 +30,11 @@ html
       var currentlyActiveMenuId = '';
       var getMenuItemFromPath = function() {
         var path = window.location.pathname
-        switch(path) {
-          default:
-          case '/':
-            currentlyActiveMenuId = 'dashboard'
-            break
-          case '/process':
-            currentlyActiveMenuId = 'processes'
-            break
-          case '/partitions':
-          case '/systemd':
-            currentlyActiveMenuId = path.replace('/', ' ')
-            break
+
+        if (path === '/') {
+          currentlyActiveMenuId = 'dashboard'
+        } else {
+          currentlyActiveMenuId = path.replace('/', '')
         }
         //- console.log(`Currently on ${path} at ${currentlyActiveMenuId}`)
       }
@@ -91,7 +84,9 @@ html
                 li
                   a#menu-dashboard(onclick="goto('/')") Dashboard
                 li
-                  a#menu-processes(onclick="goto('/process')") Processes
+                  a#menu-log-viewer(onclick="goto('/log-viewer')") Log viewer
+                li
+                  a#menu-process(onclick="goto('/process')") Processes
                 li
                   a#menu-partitions(onclick="goto('/partitions')") Partitions
                 li
