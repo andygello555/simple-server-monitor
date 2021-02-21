@@ -1,4 +1,82 @@
 extends log_viewer
 
+append scripts
+  script(src="/socket.io/socket.io.js")
+
 block log
-  p= logId
+  script.
+    var currentLog = !{JSON.stringify(logDoc)};
+    var socket
+
+    addFunctionOnWindowLoad(() => {
+      console.log('On detail view')
+      selectedLog.textContent = currentLog.name
+
+      deleteModal = document.getElementById('delete-log-modal')
+      tailOutput = document.getElementById('tail-output')
+
+      tailOutput.appendChild(document.createTextNode(''))
+
+      socket = io.connect('http://localhost:3000')
+      socket.emit('startTail', currentLog);
+
+      socket.on('newLine', function(lines) {
+        lines.forEach(line => {
+          if (line) {
+            tailOutput.textContent += `${line}\n`
+          }
+        })
+        tailOutput.scrollTop = tailOutput.scrollHeight;
+      })
+
+      socket.on('error', function(error) {
+        bulmaToast.toast({ message: error.toString(), type: 'is-danger' })
+      })
+
+      socket.on('stopped', function(code) {
+        bulmaToast.toast({ message: `Log tail process stopped with code ${code}`, type: 'is-danger' })
+      })
+    })
+
+    const deleteModalClass = {
+      toggle: function() {
+        deleteModal.classList.toggle('is-active')
+      },
+      delete: function() {
+        var deleteButton = document.getElementById('delete-log-delete-button')
+        deleteButton.classList.toggle('is-loading')
+
+        axios.delete(`/logs/${currentLog._id}`).then(res => {
+          bulmaToast.toast({ message: 'Successfully deleted log!', type: 'is-success' })
+        }).catch(error => {
+          bulmaToast.toast({ message: error.toString(), type: 'is-danger' })
+        }).then(() => {
+          setTimeout(() => {
+            deleteButton.classList.toggle('is-loading')
+            goto('/log-viewer')
+          }, 1500)
+        })
+      }
+    }
+  
+  .modal#delete-log-modal
+    .modal-background
+    .modal-card
+      header.modal-card-head
+        p.modal-card-title Delete <strong>#{logDoc.name}</strong>?
+        button.delete(aria-label="close" onclick="deleteModalClass.toggle()")
+      section.modal-card-body
+        p Are you sure you want to delete <strong>#{logDoc.name}</strong>?
+      footer.modal-card-foot
+        button.button.is-danger#delete-log-delete-button(onclick="deleteModalClass.delete()") Delete
+        button.button(onclick="deleteModalClass.toggle()") Cancel
+
+  .container
+    .card
+      header.card-header
+        p.card-header-title= logDoc.name
+      .card-content
+        pre.scrollable-log#tail-output
+      footer.card-footer
+        a.card-footer-item Save to file
+        a.card-footer-item(onclick="deleteModalClass.toggle()") Delete

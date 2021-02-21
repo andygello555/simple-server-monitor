@@ -57,7 +57,8 @@ ProcessSchema.methods.isRunning = function() {
  * Gets the latest history within the document
  */
 ProcessSchema.methods.latestHistory = function() {
-  return this.history.reduce((a, b) => a.time > b.time ? a : b)
+  // return this.history.reduce((a, b) => a.time > b.time ? a : b)
+  return this.history[this.history.length - 1]
 }
 
 /**

@@ -1,31 +1,11 @@
 extends layout
 
 block content
+  //- Add an external library because I can't be asked to write this myself
+  script(src="/dist/bulma-toast.min.js")
+
   script.
     var logs, countUp, logTotal, logDropdown, dropdownButton, newModal
-
-    //- dropClick passes the ID to the function so the url can be worked out
-    const dropClick = (id) => {
-      var url = `/log-viewer/${id.replace('dropdown-log-id-', '')}`
-      window.location.replace(url);
-
-      //- Remove is-active class from old menu item
-      for (var i = 0; i < logDropdown.childNodes.length; i++) {
-        if ((' ' + logDropdown.childNodes[i].className + ' ').indexOf(' is-active ') > -1) {
-          logDropdown.childNodes[i].className = logDropdown.childNodes[i].className.replace(/\bis-active\b/g, "");
-          break;
-        }
-      }
-
-      //- ...and add it to new menu item
-      var currentlyActive = document.getElementById(id)
-      var name, arr
-      name = "is-active";
-      arr = currentlyActive.className.split(" ");
-      if (arr.indexOf(name) == -1) {
-        currentlyActive.className += " " + name;
-      }
-    }
 
     const setInputFilter = (textbox, inputFilter) => {
       ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
@@ -44,42 +24,55 @@ block content
       });
     }
 
-    const updateLogDropdown = () => {
-      axios.get('/logs').then(res => {
-        if (res.status !== 'success') {
-          //- Update logs
-          //- Set up the menu item that are children of the container
-          if (res.results !== logTotal) {
-            //- Remove all the child nodes under dropdown menu
-            while (logDropdown.firstChild) {
-              logDropdown.removeChild(logDropdown.lastChild);
+    const dropdown = {
+      //- dropClick passes the ID to the function so the url can be worked out
+      dropClick: function(id) {
+        var actualId = id.replace('dropdown-log-id-', '')
+        var url = `/log-viewer/${actualId}`
+        window.location.replace(url);
+      },
+      updateLogDropdown: function() {
+        axios.get('/logs').then(res => {
+          if (res.status !== 'success') {
+            //- Update logs
+            //- Set up the menu item that are children of the container
+            if (res.data.results !== logTotal) {
+              //- Remove all the child nodes under dropdown menu
+              while (logDropdown.firstChild) {
+                logDropdown.removeChild(logDropdown.lastChild);
+              }
+
+              //- Then append back empty children to fit the number of logs returned
+              res.data.data.logs.forEach(l => {
+                var a = document.createElement('a')
+
+                a.setAttribute('id', `dropdown-log-id-${l._id}`)
+                a.setAttribute('class', 'dropdown-item')
+                a.setAttribute('onclick', 'dropdown.dropClick(this.id)')
+                a.appendChild(document.createTextNode(l.name))
+
+                logDropdown.appendChild(a)
+              })
             }
 
-            //- Then append back empty children to fit the number of logs returned
-            for (var i=0; i<res.results; i++) {
-              var a = document.createElement('a')
-
-              a.setAttribute('id', `dropdown-log-id-${res.data.data.logs[i]._id}`)
-              a.setAttribute('class', 'dropdown-item')
-              a.setAttribute('onclick', 'dropClick(this.id)')
-              a.appendChild(document.createTextNode(res.data.data.logs[i].name))
-
-              logDropdown.appendChild(a)
+            //- Update total
+            logTotal = res.data.results
+            countUp.update(logTotal)
+            if (logTotal === 1) {
+              logCountSuffix.textContent = 'saved log'
+            } else {
+              logCountSuffix.textContent = 'saved logs'
             }
+
+            logs = res.data.data.logs
           }
-
-          //- Update total
-          logTotal = res.results
-          countUp.update(logTotal)
-
-          logs = res.data.data.logs
-        }
-      }).catch(error => {
-        console.log(error)
-      }).then(() => { return })
+        }).catch(error => {
+          console.log(error)
+        }).then(() => { return })
+      }
     }
 
-    const modal = {
+    const newModalClass = {
       //- Clears the input fields and removes helper text
       clear: function() {
         [newModalNumberIn, newModalPathIn, newModalNameIn].forEach(input => {
@@ -118,6 +111,7 @@ block content
             return false
           }
 
+          //- Check if number value can be parsed to int
           if (input.id === 'new-log-number' && !isNaN(input.value)) {
             this.addHelp(input.id, 'Not a number', 'is-danger')
             return false
@@ -126,10 +120,33 @@ block content
         return true
       },
       create: function() {
-        if (!this.validate()) {
-          return false
+        var createButton = document.getElementById('new-log-create-button')
+        createButton.classList.toggle('is-loading')
+
+        if (this.validate()) {
+          console.log('All good')
+          var toastType, cachedResData
+
+          axios.post('/logs', {
+            name: newModalNameIn.value,
+            path: newModalPathIn.value,
+            lines: parseInt(newModalNumberIn.value)
+          }).then(res => {
+            toastType = 'is-success'
+            cachedResData = { ...res.data }
+          }).catch(error => {
+            console.log(error)
+            toastType = 'is-danger'
+          }).then(() => {
+            bulmaToast.toast({ message: cachedResData.message, type: toastType })
+            if (cachedResData.log) {
+              setTimeout(() => {
+                createButton.classList.toggle('is-loading')
+                dropdown.dropClick(cachedResData.log._id)
+              }, 1500)
+            }
+          })
         }
-        console.log('All good')
       }
     }
 
@@ -148,10 +165,15 @@ block content
       countUp.start();
 
       //- Get all required elements
+      logCountSuffix = document.getElementById('log-count-suffix')
+      logDropdownPrimary = document.getElementById('log-dropdown-primary')
       logDropdown = document.getElementById('log-dropdown')
       dropdownButton = document.getElementById('selected-log')
       newModal = document.getElementById('new-log-modal')
+      selectedLog = document.getElementById('selected-log')
+      logInfoSection = document.getElementById('log-info-section')
 
+      //- Modal elements
       newModalNumberIn = document.getElementById("new-log-number")
       newModalPathIn = document.getElementById("new-log-path")
       newModalNameIn = document.getElementById("new-log-name")
@@ -164,7 +186,39 @@ block content
         return /^(\/[^\/ ]*)+\/?$/.test(value)
       })
 
-      updateLogDropdown()
+      logDropdownPrimary.addEventListener('click', function(event) {
+        event.stopPropagation();
+        logDropdownPrimary.classList.toggle('is-active');
+      });
+
+
+      dropdown.updateLogDropdown()
+
+      if (window.location.pathname.split('/').length === 2) {
+        console.log('On viewer')
+        selectedLog.textContent = 'Select a log to view'
+
+        var infoTitle = document.createElement('p')
+        var infoSubtitle = document.createElement('p')
+        var infoTitleText, infoSubtitleText
+
+        infoTitle.setAttribute('class', 'title')
+        infoSubtitle.setAttribute('class', 'subtitle')
+
+        if (logTotal) {
+          infoTitleText = document.createTextNode('No logs created!')
+          infoSubtitleText = document.createTextNode('click on "New" to create one')
+        } else {
+          infoTitleText = document.createTextNode('No log selected!')
+          infoSubtitleText = document.createTextNode('select one from the dropdown or create a new one')
+        }
+
+        infoTitle.appendChild(infoTitleText)
+        infoSubtitle.appendChild(infoSubtitleText)
+
+        logInfoSection.appendChild(infoTitle)
+        logInfoSection.appendChild(infoSubtitle)
+      }
     })
   
   .modal#new-log-modal
@@ -172,7 +226,7 @@ block content
     .modal-card
       header.modal-card-head
         p.modal-card-title New log watcher
-        button.delete(aria-label="close", onclick="modal.toggle()")
+        button.delete(aria-label="close", onclick="newModalClass.toggle()")
       section.modal-card-body
         .container.has-text-centered.my-5 Create a new log object that will persist everytime you revisit the monitor
         .field#new-log-name-field
@@ -188,31 +242,27 @@ block content
           .control
             input.input#new-log-number(type="text" placeholder="The last 'n' number of lines to output")
       footer.modal-card-foot
-        button.button.is-success(onclick="modal.create()") Create
-        button.button(onclick="modal.toggle()") Cancel
+        button.button.is-success#new-log-create-button(onclick="newModalClass.create()") Create
+        button.button(onclick="newModalClass.toggle()") Cancel
 
   nav.level
     .level-left
       .level-item
-        p.subtitle.is-5 <strong id="log-count">0</strong> saved logs
+        p.subtitle.is-5 <strong id="log-count">0</strong> <span id="log-count-suffix">saved logs</span>
       .level-item
-        .dropdown
+        .dropdown#log-dropdown-primary(onlick="dropdown.toggle()")
           .dropdown-trigger
             button.button(aria-haspopup="true" aria-controls="log-dropdown-menu")
-              span#selected-log Select a log to view
+              span#selected-log
+              span.icon.is-small
+                i.fas.fa-angle-down(aria-hidden="true")
           .dropdown-menu#log-dropdown-menu(role="menu")
             .dropdown-content#log-dropdown
     .level-right
       .level-item
-        a.button.is-success(onclick="modal.toggle()") New
+        a.button.is-success(onclick="newModalClass.toggle()") New
   
   block log
     .container
       section.hero
-        .hero-body
-          if !logTotal
-            p.title No logs created!
-            p.subtitle click on "New" to create one
-          else
-            p.title No log selected!
-            p.subtitle select one from the dropdown or create a new one
+        .hero-body#log-info-section

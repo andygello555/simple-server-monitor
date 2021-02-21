@@ -65,7 +65,7 @@ class PartitionList extends AbstractChart {
       // Then append back empty children to fit the number of partitions in newPartitions 
       // as well as setting their ids
       for (var i=0; i<this.newPartitions.length; i++) {
-        var par = document.createElement('p')
+        var par = document.createElement('div')
         par.setAttribute('id', `partition-no-${i}`)
         this.partitionContainer.appendChild(par)
       }
@@ -78,7 +78,7 @@ class PartitionList extends AbstractChart {
     // Change the partition list using typing.js
     for (var i=0; i<this.newPartitions.length; i++) {
       if (this.currentPartitions[i] !== this.newPartitions[i]) {
-        // console.log(`Changing partition no. ${i}: ${this.currentPartitions[i]} => ${this.newPartitions[i]}`)
+        console.log(`Changing partition no. ${i}: ${this.currentPartitions[i]} => ${this.newPartitions[i]}`)
         var typed = new Typed(`#partition-no-${i}`, {
           strings: [this.currentPartitions[i], this.newPartitions[i]],
           smartBackspace: true,

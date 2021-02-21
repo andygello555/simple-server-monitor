@@ -38,14 +38,15 @@ define("COMMANDS", {
   DF: 'df -k -x squashfs -x tmpfs -x devtmpfs | tail -n +2',
   GDU: 'gdu -cnx %s',
   DU: 'du -kx --max-depth=1 %s 2>/dev/null | head -n -1',
-  CHECK_READABLE: 'test -r -a %s'
+  CHECK_READABLE: 'test -r -a %s',
+  TAIL_OPTIONS: ['-f', '-n']
 })
 
 // Routes used by frontend to get needed MongoDB docs
 define('ROUTES', {
   PROCESSES: {
-    MEM: `/processes?sort=-history.memPercent&fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.MEM}`,
-    CPU: `/processes?sort=-history.cpuPercent&fields=pid,command,history.cpuPercent,history.time&history.cpuPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.CPU}`,
+    MEM: `/processes?fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.MEM}`,
+    CPU: `/processes?fields=pid,command,history.cpuPercent,history.time&history.cpuPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.CPU}`,
     RUNNING: '/processes?fields=history.cpuPercent,history.time,history.running',
     CPU_USAGE: '/processes?fields=history.cpuPercent,history.time,history.running',
     MEM_TOP3: '/processes?fields=pid,command,history.memPercent,history.time,history.running',

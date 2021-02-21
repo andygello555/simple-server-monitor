@@ -29,7 +29,18 @@ router.get('/log-viewer/:id', function(req, res, next) {
         }
       })
     }
-    return res.render('log_view', { ...log })
+
+    try {
+      return res.render('log_view', { logDoc: { ...log._doc } })
+    } catch (error) {
+      return res.render('error', {
+        message: `Log of ID: "${req.params.id}", not found`,
+        error: {
+          status: 404,
+          stack: error.stack
+        }
+      })
+    }
   })
 })
 
