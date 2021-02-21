@@ -11,7 +11,7 @@ class ProcessMemoryUsageChart extends AbstractChart {
     this.chartElement = document.querySelector('#process-memory-chart')
     this.chart = this.createChart()
 
-    this.ENDPOINT = exports.ROUTES.PROCESSES.MEM
+    this.ENDPOINT = exports.ROUTES.PROCESSES.LINE_CHART
     this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PROCESSES * 1000
   }
 

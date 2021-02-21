@@ -20,15 +20,15 @@ class ProcessCPUTotal extends AbstractChart {
     this.countUp = new countUp.CountUp('process_cpu_total', this.total);
     this.countUp.start();
 
-    this.ENDPOINT = exports.ROUTES.PROCESSES.CPU_USAGE
+    this.ENDPOINT = exports.ROUTES.PROCESSES.LATEST
     this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PROCESSES * 1000
   }
 
   parseData(data) {
     super.parseData(data)
 
-    this.total = data.data.processes.filter(p => p.history[p.history.length - 1].running).map(p => {
-      return p.history[0].cpuPercent
+    this.total = data.data.processes.map(p => {
+      return p.latest.cpuPercent
     }).reduce((a, b) => a + b, 0)
 
     return true

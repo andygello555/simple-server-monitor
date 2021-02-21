@@ -69,10 +69,17 @@ class PartitionList extends AbstractChart {
         par.setAttribute('id', `partition-no-${i}`)
         this.partitionContainer.appendChild(par)
       }
-    }
 
-    if (this.currentPartitions.length === 0 && this.newPartitions.length) {
-      this.currentPartitions = new Array(this.newPartitions.length).fill('')
+      // Match the sizes of the data arrays
+      while (this.currentPartitions.length !== this.newPartitions.length) {
+        if (this.currentPartitions.length <= this.newPartitions.length) {
+          // Push empty elements onto currentPartitions as there are now more partitions
+          this.currentPartitions.push('')
+        } else {
+          // In the case that there are less partitions now than there once was remove elements from currentPartitions
+          this.currentPartitions.pop()
+        }
+      }
     }
 
     // Change the partition list using typing.js

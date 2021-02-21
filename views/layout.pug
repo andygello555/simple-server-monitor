@@ -31,6 +31,9 @@ html
     //- Changes the currently active menu item
     script.
       var currentlyActiveMenuId = '';
+      var cachedQueries // Map of query paths to queries along with their dates
+      var endpointsBeingUsed  // A map of endpoints that are being used to a count of how many widgets are using them (this is to aid in caching)
+
       var getMenuItemFromPath = function() {
         var path = window.location.pathname
 
@@ -59,6 +62,9 @@ html
       }
 
       addFunctionOnWindowLoad(() => {
+        cachedQueries = new Map()
+        endpointsBeingUsed = new Map()
+
         getMenuItemFromPath()
         updateMenu(currentlyActiveMenuId, currentlyActiveMenuId)
       })

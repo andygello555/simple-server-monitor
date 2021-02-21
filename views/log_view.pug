@@ -6,11 +6,39 @@ append scripts
 block log
   script.
     var currentLog = !{JSON.stringify(logDoc)};
-    var socket
+    var socket, startedLogTime
+
+    const filenameDateFormat = 'YYYY-MM-DD[T]HH:mmA'
+
+    //- Saves the log content to a text file
+    const saveLogToFile = () => {
+      if (tailOutput.textContent) {
+        var file = new Blob([tailOutput.textContent], { type: 'text/plain' })
+        var filename = `${currentLog.name}-f-${startedLogTime.format(filenameDateFormat)}-t-${moment().format(filenameDateFormat)}.txt`
+        if (window.navigator.msSaveOrOpenBlob) {
+          window.navigator.msSaveOrOpenBlob(file, filename)
+        } else {
+          var a = document.createElement('a'),
+              url = URL.createObjectURL(file)
+          a.href = url
+          a.download = filename
+          document.body.appendChild(a)
+          a.click()
+          setTimeout(() => {
+            document.body.removeChild(a)
+            window.URL.revokeObjectURL(url)
+          }, 0)
+        }
+      } else {
+        bulmaToast.toast({ message: 'Tail does not have any output', type: 'is-danger' })
+      }
+    }
 
     addFunctionOnWindowLoad(() => {
       console.log('On detail view')
       selectedLog.textContent = currentLog.name
+
+      startedLogTime = moment()
 
       deleteModal = document.getElementById('delete-log-modal')
       tailOutput = document.getElementById('tail-output')
@@ -78,5 +106,5 @@ block log
       .card-content
         pre.scrollable-log#tail-output
       footer.card-footer
-        a.card-footer-item Save to file
+        a.card-footer-item(onclick="saveLogToFile()") Save to file
         a.card-footer-item(onclick="deleteModalClass.toggle()") Delete

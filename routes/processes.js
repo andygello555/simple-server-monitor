@@ -47,4 +47,22 @@ router.get('/', async function(req, res, next) {
   })
 });
 
+/* GET the all processes with only their latest RUNNING history */
+router.get('/latest', async function(req, res, next) {
+  var processes = await Process.find()
+  processes = processes.filter(p => p.history[p.history.length - 1].running).map(p => {
+    return {
+      pid: p.pid,
+      command: p.command,
+      latest: p.history[p.history.length - 1]
+    }
+  })
+
+  res.status(200).json({
+    status: 'success',
+    results: processes.length,
+    data: { processes }
+  })
+})
+
 module.exports = router;

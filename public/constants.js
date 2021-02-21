@@ -45,12 +45,8 @@ define("COMMANDS", {
 // Routes used by frontend to get needed MongoDB docs
 define('ROUTES', {
   PROCESSES: {
-    MEM: `/processes?fields=pid,command,history.memPercent,history.time&history.memPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.MEM}`,
-    CPU: `/processes?fields=pid,command,history.cpuPercent,history.time&history.cpuPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.CPU}`,
-    RUNNING: '/processes?fields=history.cpuPercent,history.time,history.running',
-    CPU_USAGE: '/processes?fields=history.cpuPercent,history.time,history.running',
-    MEM_TOP3: '/processes?fields=pid,command,history.memPercent,history.time,history.running',
-    CPU_TOP3: '/processes?fields=pid,command,history.cpuPercent,history.time,history.running',
+    LINE_CHART: `/processes?fields=pid,command,history.memPercent,history.cpuPercent,history.time&history.memPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.MEM}&history.cpuPercent[gt]=${exports.PERCENT_THRESHOLD.PROCESSES.CPU}`,
+    LATEST: '/processes/latest',
   },
   PARTITIONS: {
     PIE: '/partitions?sort=mounted'
@@ -86,3 +82,10 @@ define('DEFAULTS', {
     LINES: 100
   }
 })
+
+// Numer of milleseconds before a cached query is considered stale
+define('STALE_CACHED_QUERY', 15000)
+
+// The number of milleseonds that slave widgets should wait before 
+// calling their update function for the first time
+define('SLAVE_WIDGET_START_OFFSET', 800)

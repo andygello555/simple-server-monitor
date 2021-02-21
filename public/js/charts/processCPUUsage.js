@@ -11,7 +11,7 @@ class ProcessCPUUsageChart extends AbstractChart {
     this.chartElement = document.querySelector('#process-cpu-chart')
     this.chart = this.createChart()
 
-    this.ENDPOINT = exports.ROUTES.PROCESSES.CPU
+    this.ENDPOINT = exports.ROUTES.PROCESSES.LINE_CHART
     this.UPDATE_TIMEOUT = exports.UPDATES.CHARTS.PROCESSES * 1000
   }
 
