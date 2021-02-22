@@ -10,10 +10,10 @@ router.post('/', function(req, res, next) {
     lines: req.body.lines
 	}
 
-  var options = { upsert: true, new: true, setDefaultsOnInsert: true }
+  var options = { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
   Log.findOneAndUpdate({ name: log.name }, log, options, (error, log) => {
     if (error) {
-      return res.status(404).send({
+      return res.status(400).send({
         errors: error.errors,
         message: 'An error has occured when trying to create this Log view'
       })

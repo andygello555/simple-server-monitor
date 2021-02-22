@@ -1,6 +1,6 @@
 var mongoose = require("mongoose");
 const constants = require('../public/constants')
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 const util = require('util');
 var Schema = mongoose.Schema;
 
@@ -15,18 +15,20 @@ const LogSchema = new Schema({
     required: true,
     validate: {
       validator: function(v) {
-        var valid = false
+        // First check if file is blacklisted
+        if (constants.LOG_BLACKLIST.indexOf(v) > -1) {
+          return false
+        }
         
         // Execute the test command and return the output code
-        exec(util.format(constants.COMMANDS.CHECK_READABLE, v), (err, stdout, stderr) => {
-          console.log('stdout is: ' + stdout)
-          console.log('stderr is: ' + stderr)
-          console.log('error is: ' + err)
-        }).on('exit', code => valid = !code)
-
-        return valid
+        try {
+          execSync(util.format(constants.COMMANDS.CHECK_READABLE, v, v))
+          return true
+        } catch (error) {
+          return false
+        }
       },
-      message: props => `${props.value} cannot be found/read from`
+      message: props => constants.LOG_BLACKLIST.indexOf(props.value) > -1 ? `${props.value} is blacklisted` : `${props.value} cannot be found/read from`
     }
   },
   lines: {

@@ -112,7 +112,7 @@ block content
           }
 
           //- Check if number value can be parsed to int
-          if (input.id === 'new-log-number' && !isNaN(input.value)) {
+          if (input.id === 'new-log-number' && isNaN(input.value)) {
             this.addHelp(input.id, 'Not a number', 'is-danger')
             return false
           }
@@ -124,7 +124,6 @@ block content
         createButton.classList.toggle('is-loading')
 
         if (this.validate()) {
-          console.log('All good')
           var toastType, cachedResData
 
           axios.post('/logs', {
@@ -135,16 +134,22 @@ block content
             toastType = 'is-success'
             cachedResData = { ...res.data }
           }).catch(error => {
-            console.log(error)
+            if (error.response.data.errors.path) {
+              cachedResData = { ...error.response.data.errors.path }
+            } else {
+              cachedResData = { ...error.response.data.errors }
+            }
             toastType = 'is-danger'
           }).then(() => {
             bulmaToast.toast({ message: cachedResData.message, type: toastType })
-            if (cachedResData.log) {
-              setTimeout(() => {
-                createButton.classList.toggle('is-loading')
+            setTimeout(() => {
+              createButton.classList.toggle('is-loading')
+              if (cachedResData.log) {
                 dropdown.dropClick(cachedResData.log._id)
-              }, 1500)
-            }
+              } else {
+                this.toggle()
+              }
+            }, 1200)
           })
         }
       }

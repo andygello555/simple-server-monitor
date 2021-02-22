@@ -88,7 +88,7 @@ app.use('/logs', logsRouter)
 // Setup database connection
 var mongoDB = 'mongodb://127.0.0.1/simple-monitor';
 console.log('Connecting to:', mongoDB);
-mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true});
+mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true, useFindAndModify: false });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 

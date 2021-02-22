@@ -25,6 +25,10 @@ define("PERCENT_THRESHOLD", {
 // Partition mount points that can be skipped when checking disk space usage
 define("SKIP_DIRECTORIES", ['/boot/efi'])
 
+// Files which cannot be logged (this is up to the user)
+// NOTE THAT FILES WHICH THE SERVER DOESN'T HAVE PERMISSION TO LOG CANNOT BE TAILED ANYWAY
+define("LOG_BLACKLIST", ['/etc/passwd'])
+
 // Command headers to enable parsing of commands below
 define("PS_HEADERS", ['pid', 'user', '%mem', '%cpu', 'command'])
 define("DF_HEADERS", ['filesystem', 'size', 'used', 'available', 'usedPercent', 'mounted'])
@@ -38,7 +42,7 @@ define("COMMANDS", {
   DF: 'df -k -x squashfs -x tmpfs -x devtmpfs | tail -n +2',
   GDU: 'gdu -cnx %s',
   DU: 'du -kx --max-depth=1 %s 2>/dev/null | head -n -1',
-  CHECK_READABLE: 'test -r -a %s',
+  CHECK_READABLE: 'test -r %s -a %s',
   TAIL_OPTIONS: ['-f', '-n']
 })
 
