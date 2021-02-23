@@ -43,7 +43,10 @@ define("COMMANDS", {
   GDU: 'gdu -cnx %s',
   DU: 'du -kx --max-depth=1 %s 2>/dev/null | head -n -1',
   CHECK_READABLE: 'test -r %s -a %s',
-  TAIL_OPTIONS: ['-f', '-n']
+  TAIL_OPTIONS: ['-f', '-n'],
+  SERVICE_LIST: 'systemctl list-units --type=service --no-pager --all | tail -n +2 | head -n -7',
+  SERVICE_TAIL_LOG: 'journalctl -u %s -b -f',
+  SERVICE_GET_PID: 'systemctl show --property MainPID --value %s',
 })
 
 // Routes used by frontend to get needed MongoDB docs

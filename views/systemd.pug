@@ -1,0 +1,243 @@
+extends layout
+
+block content
+  script.
+    var systemdPanel, systemdPanelTabs, systemdPanelSearch, systemdAllServices
+
+    const panelTabs = {
+      panelTabAttrColour: {
+        load: '#00D1B2',
+        active: '#3E8ED0',
+        sub: '#FFE08A'
+      },
+
+      panelTabDescriptors: [
+        {
+          name: 'All',
+          attr: null,
+          icon: {
+            class: 'fa-running',
+            colour: null
+          }
+        },
+        {
+          name: 'Loaded',
+          attr: 'load',
+          icon: {
+            class: 'fa-truck-loading',
+            colour: 'is-success'
+          }
+        },
+        {
+          name: 'Not found',
+          attr: 'load',
+          icon: {
+            class: 'fa-truck-loading',
+            colour: 'is-danger'
+          }
+        },
+        {
+          name: 'Masked',
+          attr: 'load',
+          icon: {
+            class: 'fa-truck-loading',
+            colour: 'is-warning'
+          }
+        },
+        {
+          name: 'Active',
+          attr: 'active',
+          icon: {
+            class: 'fa-chart-line',
+            colour: 'is-success'
+          }
+        },
+        {
+          name: 'Inactive',
+          attr: 'active',
+          icon: {
+            class: 'fa-chart-line',
+            colour: 'is-warning'
+          }
+        },
+        {
+          name: 'Failed',
+          attr: 'active',
+          icon: {
+            class: 'fa-chart-line',
+            colour: 'is-danger'
+          }
+        },
+        {
+          name: 'Running',
+          attr: 'sub',
+          icon: {
+            class: 'fa-running',
+            colour: 'is-success'
+          }
+        },
+        {
+          name: 'Exited',
+          attr: 'sub',
+          icon: {
+            class: 'fa-running',
+            colour: 'is-warning'
+          }
+        },
+        {
+          name: 'Dead',
+          attr: 'sub',
+          icon: {
+            class: 'fa-running',
+            colour: 'is-danger'
+          }
+        }
+      ],
+
+      findTabDescriptor: function(tabName) {
+        return this.panelTabDescriptors.find(tab => tab.name === tabName)
+      },
+
+      construct: function() {
+        //- Add all the tabs
+        this.addAllTabs()
+
+        //- Add all services to list
+        this.services('All')
+      },
+
+      addAllTabs: function() {
+        this.panelTabDescriptors.forEach(tab => {
+          var a = document.createElement('a')
+
+          a.setAttribute('onclick', `panelTabs.change("${tab.name}")`)
+          if (tab.name !== 'All')
+            a.setAttribute('color', this.panelTabAttrColour[tab.attr])
+
+          a.appendChild(document.createTextNode(tab.name))
+          systemdPanelTabs.appendChild(a)
+        })
+        this.change('All')
+      },
+
+      refresh: function() {
+        //- Query all services
+      },
+
+      services: function(tab) {
+        //- Query all the services and store inside systemdAllServices
+        this.refresh()
+
+        return
+
+        //- Only get 'a's of depth (direct descendants of panel)
+        var nodes = systemdPanel.getElementsByTagName("a");
+        nodes = Array.prototype.slice.call(nodes);
+        nodes = nodes.filter(function(v,i){
+          return v.parentElement === systemdPanel; 
+        })
+
+        //- Remove all services from the list
+        nodes.forEach(service => {
+          service.parentNode.removeChild(service)
+        })
+
+        //- Add all services to the list that match the tab descriptor
+        var filtered = systemdAllServices.filter(service => attr ? service[tab.attr] === tab.name.toLowerCase().replace(' ', '-') : true)
+        filtered.forEach(service => {
+          //- Create panel-block element to display service
+          var a = document.createElement('a')
+          var colour = tab.icon.colour
+
+          if (!colour) {
+            //- Happens when on the 'All' tab
+            switch (service.sub) {
+              case 'running':
+                colour = 'is-success'
+                break
+              case 'exited':
+                colour = 'is-warning'
+                break
+              case 'dead':
+                colour = 'is-danger'
+                break
+              default:
+                colour = 'is-link'
+                break
+            }
+          }
+          a.setAttribute('class', `panel-block ${colour}`)
+
+          var span = document.createElement('span')
+          span.setAttribute('class', 'panel-icon')
+
+          var icon = document.createElement('i')
+          icon.setAttribute('class', `fas ${tab.icon.class}`)
+          icon.setAttribute('aria-hidden', 'true')
+
+          span.appendChild(icon)
+          a.appendChild(span)
+          a.appendChild(document.createTextNode(service.unit))
+        })
+      },
+
+      change: function(tabName) {
+        systemdPanelTabs.childNodes.forEach(tab => {
+          if (tab.classList.contains('is-active') || tab.textContent === tabName) {
+            tab.classList.toggle('is-active')
+          }
+        })
+
+        //- Then update the list of services in the panel
+        var tabDes = this.findTabDescriptor(tabName)
+        this.services(tabDes)
+      },
+
+      search: function() {
+        var input = systemdPanelSearch.value.toUpperCase()
+        systemdPanelTabs.getElementsByTagName('a').forEach(service => {
+          var txt = service.textContent || service.innerText
+          if (txt.toUpperCase().indexOf(input) > -1) {
+            service.style.display = ''
+          } else {
+            service.style.display = 'none'
+          }
+        })
+      }
+    }
+
+    addFunctionOnWindowLoad(() => {
+      systemdPanel = document.getElementById('systemd-panel')
+      systemdPanelTabs = document.getElementById('systemd-panel-tabs')
+      systemdPanelSearch = document.getElementById('systemd-panel-search')
+
+      //- Create all panels, list items and activate the 'All' tab
+      panelTabs.construct()
+    })
+
+  .container
+    article.panel.is-link#systemd-panel
+      p.panel-heading Services
+      p.panel-tabs#systemd-panel-tabs
+      .panel-block
+        p.control.has-icons-left
+          input.input.is-link#systemd-panel-search(type="text" placeholder="Search", onkeyup="panelTabs.search()")
+          span.icon.is-left
+            i.fas.fa-search(aria-hidden="true")
+      //- Example list items
+      //- a.panel-block.is-active
+      //-   span.panel-icon
+      //-     i.fas.fa-book(aria-hidden="true")
+      //-   | bulma
+      //- a.panel-block
+      //-   span.panel-icon
+      //-     i.fas.fa-book(aria-hidden="true")
+      //-   | marksheet
+      //- a.panel-block
+      //-   span.panel-icon
+      //-     i.fas.fa-book(aria-hidden="true")
+      //-   | minireset.css
+      //- a.panel-block
+      //-   span.panel-icon
+      //-     i.fas.fa-book(aria-hidden="true")
+      //-   | jgthms.github.io

@@ -105,11 +105,11 @@ var { cronProcesses } = require('./public/js/tasks/processes')
 var { cronPartitions } = require('./public/js/tasks/partitions')
 
 // Call jobs first so that they are run on start
-cronProcesses()
-cronPartitions()
+// cronProcesses()
+// cronPartitions()
 
-var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
-var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
+// var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
+// var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
