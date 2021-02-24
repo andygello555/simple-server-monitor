@@ -103,8 +103,6 @@ const cronPartitions = () => {
               partition[header] = parseInt(token)
               break
           }
-        } else {
-          continue
         }
       }
 

@@ -51,30 +51,19 @@ router.get('/systemd', function(req, res, next) {
 })
 
 /* GET a service detail page */
-router.get('/systemd/:id', function(req, res, next) {
-  Service.findById(req.params.id, (err, service) => {
-    if (err) {
-      return res.render('error', {
-        message: `Service of ID: "${req.params.id}", not found`,
-        error: {
-          status: 404,
-          stack: err.stack
-        }
-      })
-    }
-
-    try {
-      return res.render('service', { serviceDoc: { ...service._doc } })
-    } catch (error) {
-      return res.render('error', {
-        message: `Service of ID: "${req.params.id}", not found`,
-        error: {
-          status: 404,
-          stack: error.stack
-        }
-      })
-    }
-  })
+router.get('/systemd/:id', async function(req, res, next) {
+  try {
+    const service = await Service.findById(req.params.id).populate('pid')
+    return res.render('service', { serviceDoc: { ...service._doc } })
+  } catch (error) {
+    return res.render('error', {
+      message: `Service of ID: "${req.params.id}", not found`,
+      error: {
+        status: 404,
+        stack: error.stack
+      }
+    })
+  }
 })
 
 module.exports = router;

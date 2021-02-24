@@ -9,7 +9,8 @@ const ServiceSchema = new Schema({
   },
   pid: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Process'
+    ref: 'Process',
+    default: null
   },
   load: {
     type: String,

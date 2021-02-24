@@ -1,5 +1,98 @@
 extends layout
 
+append scripts
+  script(src="/socket.io/socket.io.js")
+
 block content
   script.
-    var currentLog = !{JSON.stringify(serviceDoc)};
+    var currentService = !{JSON.stringify(serviceDoc)};
+
+    addFunctionOnWindowLoad(() => {
+      journalCtlOutput = document.getElementById('journalctl-output')
+      journalCtlOutput.appendChild(document.createTextNode(''))
+
+      socket = io.connect('http://localhost:3000')
+      socket.emit('startJournalCtl', currentService.unit);
+
+      socket.on('newLine', function(lines) {
+        lines.forEach(line => {
+          if (line) {
+            journalCtlOutput.textContent += `${line}\n`
+          }
+        })
+        journalCtlOutput.scrollTop = journalCtlOutput.scrollHeight;
+      })
+
+      socket.on('error', function(error) {
+        bulmaToast.toast({ message: error.toString(), type: 'is-danger' })
+      })
+
+      socket.on('stopped', function(code) {
+        bulmaToast.toast({ message: `journalctl process stopped with code ${code}`, type: 'is-danger' })
+      })
+    })
+
+  nav.level
+  .level-left
+    .level-item
+      button.button(onclick="goto('/systemd')")
+        span.icon.is-small
+          i.fas.fa-arrow-alt-circle-left
+        span Return
+
+  .container.mt-5
+    .tile.is-ancestor
+      .tile.is-vertical.is-6
+        .tile
+          .tile.is-parent.is-vertical
+            article.tile.is-child.notification.is-primary
+              p.title.is-4= serviceDoc.unit
+              p.subtitle.is-6= serviceDoc.description
+              article.tile.is-child.notification.has-text-black
+                if serviceDoc.pid
+                  .level
+                    .level-left
+                      .level-item
+                        p.subtitle.is-7 Process exists in database
+                      .level-item
+                        button.button(onclick="goto('/process/' + currentService.pid._id)")
+                          span.icon
+                            i.fas.fa-arrow-right
+                else
+                  p.subtitle.is-7 Process does not exist in database
+            article.tile.is-child.notification.is-info
+              .icon-text
+                span.icon.is-large
+                  i.fas.fa-2x.fa-truck-loading
+                span.title.is-size-5-mobile    load
+              section.hero
+                .hero-body.has-text-centered
+                  p.title.is-4.is-size-7-mobile #{serviceDoc.load.charAt(0).toUpperCase() + serviceDoc.load.slice(1)}
+          .tile.is-parent.is-vertical
+            article(class=`tile is-child notification ${serviceDoc.active === 'active' ? 'is-success' : serviceDoc.active === 'inactive' ? 'is-warning' : 'is-danger'}`)
+              .icon-text
+                span.icon.is-large
+                  i.fas.fa-2x.fa-chart-line
+                span.title.is-size-5-mobile   active
+              section.hero
+                .hero-body.has-text-centered
+                  p.title.is-4.is-size-7-mobile #{serviceDoc.active.charAt(0).toUpperCase() + serviceDoc.active.slice(1)}
+            article.tile.is-child.notification.is-link
+              .icon-text
+                span.icon.is-large
+                  i.fas.fa-2x.fa-running
+                span.title.is-size-5-mobile    sub
+              section.hero
+                .hero-body.has-text-centered
+                  p.title.is-4.is-size-7-mobile #{serviceDoc.sub.charAt(0).toUpperCase() + serviceDoc.sub.slice(1)}
+      .tile.is-parent
+        .tile.is-child.card
+          header.card-header
+            .level
+              .level-item
+                p.card-header-title journalctl
+              .level-item
+                small (from current boot)
+          .card-content
+            .container
+              pre.scrollable-log-short#journalctl-output

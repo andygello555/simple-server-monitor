@@ -33,7 +33,7 @@ block content
       },
       updateLogDropdown: function() {
         axios.get('/logs').then(res => {
-          if (res.status !== 'success') {
+          if (res.status === 200 && res.data.status === 'success') {
             //- Update logs
             //- Set up the menu item that are children of the container
             if (res.data.results !== logTotal) {
@@ -247,7 +247,10 @@ block content
           .control
             input.input#new-log-number(type="text" placeholder="The last 'n' number of lines to output")
       footer.modal-card-foot
-        button.button.is-success#new-log-create-button(onclick="newModalClass.create()") Create
+        button.button.is-success#new-log-create-button(onclick="newModalClass.create()")
+          span.icon.is-small
+            i.fas.fa-check
+          span Save
         button.button(onclick="newModalClass.toggle()") Cancel
 
   nav.level
@@ -265,7 +268,10 @@ block content
             .dropdown-content#log-dropdown
     .level-right
       .level-item
-        a.button.is-success(onclick="newModalClass.toggle()") New
+        button.button.is-success(onclick="newModalClass.toggle()")
+          span.icon.is-small
+            i.fas.fa-plus
+          span New
   
   block log
     .container

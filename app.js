@@ -10,16 +10,19 @@ var { CronJob } = require('cron');
 const constants = require('./public/constants')
 const io = require("socket.io")();
 const { spawn } = require('child_process');
+const process = require('process')
 
 // Routers
 var indexRouter = require('./routes/index');
 var processesRouter = require('./routes/processes');
 var partitionsRouter = require('./routes/partitions');
 var logsRouter = require('./routes/log');
+var servicesRouter = require('./routes/services')
 
-// Models
+// Models to clear on start
 var processModel = require('./models/process')
 var partitionModel = require('./models/partition')
+var serviceModel = require('./models/service')
 
 var app = express();
 
@@ -40,6 +43,31 @@ app.use('/socket.io', express.static(path.join(__dirname, 'node_modules/socket.i
 app.io = io
 io.on('connection', (socket) => {
   var tail
+  var defaultCallbacks = {
+    callStdout: function(data) {
+      // Emit all lines over the socket
+      var lines = data.toString().split('\n')
+      if (lines.length) {
+        io.emit('newLine', lines)
+      }      
+    },
+    callStderr: function(data) {
+      io.emit('error', data.toString())
+    },
+    callError: function(error) {
+      io.emit('error', error.toString())
+    },
+    callClose: function(code) {
+      io.emit('stopped', code)
+    }
+  }
+
+  const assignDefaults = () => {
+    tail.stdout.on("data", defaultCallbacks.callStdout);
+    tail.stderr.on("data", defaultCallbacks.callStderr);
+    tail.on('error', defaultCallbacks.callError);
+    tail.on('close', defaultCallbacks.callClose);
+  }
 
   // On disconnect we want to kill the tail process
   socket.on('disconnect', () => {
@@ -57,25 +85,16 @@ io.on('connection', (socket) => {
 
     tail = spawn('tail', options)
 
-    tail.stdout.on("data", data => {
-      // Emit all lines over the socket
-      var lines = data.toString().split('\n')
-      if (lines.length) {
-        io.emit('newLine', lines)
-      }
-    });
-  
-    tail.stderr.on("data", data => {
-      io.emit('error', data.toString())
-    });
-  
-    tail.on('error', (error) => {
-      io.emit('error', error.toString())
-    });
+    assignDefaults()
+  })
 
-    tail.on('close', code => {
-      io.emit('stopped', code)
-    })
+  socket.on('startJournalCtl', (serviceUnit) => {
+    var options = [...constants.COMMANDS.SERVICE_TAIL_LOG]
+    options[1][1] = serviceUnit
+
+    tail = spawn(...options)
+
+    assignDefaults()
   })
 });
 
@@ -84,6 +103,7 @@ app.use('/', indexRouter);
 app.use('/processes', processesRouter);
 app.use('/partitions', partitionsRouter);
 app.use('/logs', logsRouter)
+app.use('/services', servicesRouter)
 
 // Setup database connection
 var mongoDB = 'mongodb://127.0.0.1/simple-monitor';
@@ -93,23 +113,33 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 // Empty all collections (except logs as those should persist)
-processModel.deleteMany({}, null, (err) => {
-  if (err) console.log(err)
-})
-partitionModel.deleteMany({}, null, (err) => {
-  if (err) console.log(err)
-})
+process.stdout.write('Clearing all collections...');
+
+(async () => {
+  await processModel.deleteMany({}).exec()
+  await partitionModel.deleteMany({}).exec()
+  await serviceModel.deleteMany({}).exec()
+})();
+
+console.log('Done')
 
 // Initialise all cronjobs
-var { cronProcesses } = require('./public/js/tasks/processes')
-var { cronPartitions } = require('./public/js/tasks/partitions')
+var { cronProcesses } = require('./public/js/tasks/processes');
+var { cronPartitions } = require('./public/js/tasks/partitions');
+var { cronServices } = require('./public/js/tasks/services');
 
 // Call jobs first so that they are run on start
-// cronProcesses()
-// cronPartitions()
+cronProcesses()
+cronPartitions()
 
-// var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
-// var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
+// Set a timeout so that cronProcesses has time to finish
+setTimeout(() => {
+  cronServices()
+}, 2000)
+
+var processJob = new CronJob(constants.UPDATES.CRONS.PROCESSES, cronProcesses, null, true, 'Europe/London')
+var partitionJob = new CronJob(constants.UPDATES.CRONS.PARTITIONS, cronPartitions, null, true, 'Europe/London')
+var serviceJob = new CronJob(constants.UPDATES.CRONS.SERVICES, cronServices, null, true, 'Europe/London')
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

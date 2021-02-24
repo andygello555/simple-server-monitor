@@ -67,6 +67,10 @@ html
 
         getMenuItemFromPath()
         updateMenu(currentlyActiveMenuId, currentlyActiveMenuId)
+
+        setTimeout(() => {
+          document.body.classList.remove('fade')
+        }, 230);
       })
     
     //- Define a goto function to jump around pages
@@ -80,6 +84,9 @@ html
         updateMenu(current, newItem)
       }
   body
+    script.
+      document.body.classList.add('fade')
+
     nav.navbar.hero.is-link(role="navigation", aria-label="main navigation")
       .navbar-brand
         a.navbar-item
@@ -95,10 +102,10 @@ html
                 li
                   a#menu-log-viewer(onclick="goto('/log-viewer')") Log viewer
                 li
+                  a#menu-systemd(onclick="goto('/systemd')") Systemd
+                li
                   a#menu-process(onclick="goto('/process')") Processes
                 li
                   a#menu-partitions(onclick="goto('/partitions')") Partitions
-                li
-                  a#menu-systemd(onclick="goto('/systemd')") Systemd
           .column
             block content

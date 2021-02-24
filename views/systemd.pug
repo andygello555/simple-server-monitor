@@ -2,7 +2,7 @@ extends layout
 
 block content
   script.
-    var systemdPanel, systemdPanelTabs, systemdPanelSearch, systemdAllServices
+    var systemdPanel, systemdPanelTabs, systemdPanelSearch, systemdAllServices, systemdPanelServiceCount
 
     const panelTabs = {
       panelTabAttrColour: {
@@ -25,7 +25,7 @@ block content
           attr: 'load',
           icon: {
             class: 'fa-truck-loading',
-            colour: 'is-success'
+            colour: 'has-text-success'
           }
         },
         {
@@ -33,7 +33,7 @@ block content
           attr: 'load',
           icon: {
             class: 'fa-truck-loading',
-            colour: 'is-danger'
+            colour: 'has-text-danger'
           }
         },
         {
@@ -41,7 +41,7 @@ block content
           attr: 'load',
           icon: {
             class: 'fa-truck-loading',
-            colour: 'is-warning'
+            colour: 'has-text-warning'
           }
         },
         {
@@ -49,7 +49,7 @@ block content
           attr: 'active',
           icon: {
             class: 'fa-chart-line',
-            colour: 'is-success'
+            colour: 'has-text-success'
           }
         },
         {
@@ -57,7 +57,7 @@ block content
           attr: 'active',
           icon: {
             class: 'fa-chart-line',
-            colour: 'is-warning'
+            colour: 'has-text-warning'
           }
         },
         {
@@ -65,7 +65,7 @@ block content
           attr: 'active',
           icon: {
             class: 'fa-chart-line',
-            colour: 'is-danger'
+            colour: 'has-text-danger'
           }
         },
         {
@@ -73,7 +73,7 @@ block content
           attr: 'sub',
           icon: {
             class: 'fa-running',
-            colour: 'is-success'
+            colour: 'has-text-success'
           }
         },
         {
@@ -81,7 +81,7 @@ block content
           attr: 'sub',
           icon: {
             class: 'fa-running',
-            colour: 'is-warning'
+            colour: 'has-text-warning'
           }
         },
         {
@@ -89,7 +89,7 @@ block content
           attr: 'sub',
           icon: {
             class: 'fa-running',
-            colour: 'is-danger'
+            colour: 'has-text-danger'
           }
         }
       ],
@@ -103,7 +103,7 @@ block content
         this.addAllTabs()
 
         //- Add all services to list
-        this.services('All')
+        //- this.services('All')
       },
 
       addAllTabs: function() {
@@ -122,20 +122,22 @@ block content
 
       refresh: function() {
         //- Query all services
+        return axios.get('/services').then(res => {
+          if (res.status === 200 && res.data.status === 'success') {
+            systemdAllServices = res.data.data.services
+          }
+        }).catch(error => {
+          console.log(error)
+        }).then(() => { return })
       },
 
-      services: function(tab) {
+      services: async function(tab) {
         //- Query all the services and store inside systemdAllServices
-        this.refresh()
-
-        return
+        await this.refresh()
 
         //- Only get 'a's of depth (direct descendants of panel)
         var nodes = systemdPanel.getElementsByTagName("a");
         nodes = Array.prototype.slice.call(nodes);
-        nodes = nodes.filter(function(v,i){
-          return v.parentElement === systemdPanel; 
-        })
 
         //- Remove all services from the list
         nodes.forEach(service => {
@@ -143,7 +145,7 @@ block content
         })
 
         //- Add all services to the list that match the tab descriptor
-        var filtered = systemdAllServices.filter(service => attr ? service[tab.attr] === tab.name.toLowerCase().replace(' ', '-') : true)
+        var filtered = systemdAllServices.filter(service => tab.attr ? service[tab.attr] === tab.name.toLowerCase().replace(' ', '-') : true)
         filtered.forEach(service => {
           //- Create panel-block element to display service
           var a = document.createElement('a')
@@ -153,23 +155,24 @@ block content
             //- Happens when on the 'All' tab
             switch (service.sub) {
               case 'running':
-                colour = 'is-success'
+                colour = 'has-text-success'
                 break
               case 'exited':
-                colour = 'is-warning'
+                colour = 'has-text-warning'
                 break
               case 'dead':
-                colour = 'is-danger'
+                colour = 'has-text-danger'
                 break
               default:
-                colour = 'is-link'
+                colour = 'has-text-link'
                 break
             }
           }
-          a.setAttribute('class', `panel-block ${colour}`)
+          a.setAttribute('class', 'panel-block')
+          a.setAttribute('onclick', `goto("/systemd/${service._id}")`)
 
           var span = document.createElement('span')
-          span.setAttribute('class', 'panel-icon')
+          span.setAttribute('class', `panel-icon ${colour}`)
 
           var icon = document.createElement('i')
           icon.setAttribute('class', `fas ${tab.icon.class}`)
@@ -178,7 +181,13 @@ block content
           span.appendChild(icon)
           a.appendChild(span)
           a.appendChild(document.createTextNode(service.unit))
+
+          systemdPanel.appendChild(a)
         })
+
+        //- Update countUp
+        systemdPanelServiceCount = filtered.length
+        systemdPanelServiceCountUp.update(systemdPanelServiceCount)
       },
 
       change: function(tabName) {
@@ -195,14 +204,22 @@ block content
 
       search: function() {
         var input = systemdPanelSearch.value.toUpperCase()
-        systemdPanelTabs.getElementsByTagName('a').forEach(service => {
+        var nodes = systemdPanel.getElementsByTagName("a");
+        nodes = Array.prototype.slice.call(nodes);
+
+        systemdPanelServiceCount = 0
+        nodes.forEach(service => {
           var txt = service.textContent || service.innerText
           if (txt.toUpperCase().indexOf(input) > -1) {
             service.style.display = ''
+            systemdPanelServiceCount++
           } else {
             service.style.display = 'none'
           }
         })
+
+        //- Update service count now that some services have been filtered
+        systemdPanelServiceCountUp.update(systemdPanelServiceCount)
       }
     }
 
@@ -211,12 +228,16 @@ block content
       systemdPanelTabs = document.getElementById('systemd-panel-tabs')
       systemdPanelSearch = document.getElementById('systemd-panel-search')
 
+      systemdPanelServiceCount = 0
+      systemdPanelServiceCountUp = new countUp.CountUp('systemd-panel-service-count', systemdPanelServiceCount);
+      systemdPanelServiceCountUp.start();
+
       //- Create all panels, list items and activate the 'All' tab
       panelTabs.construct()
     })
 
   .container
-    article.panel.is-link#systemd-panel
+    article.panel.is-link
       p.panel-heading Services
       p.panel-tabs#systemd-panel-tabs
       .panel-block
@@ -224,6 +245,15 @@ block content
           input.input.is-link#systemd-panel-search(type="text" placeholder="Search", onkeyup="panelTabs.search()")
           span.icon.is-left
             i.fas.fa-search(aria-hidden="true")
+      .panel-block(style="display: block;")
+        .level
+          .level-left
+          .level-item.has-text-centered
+            div
+              p.heading services
+              p.title.is-5#systemd-panel-service-count 0
+          .level-right
+      div.scrollable-log#systemd-panel
       //- Example list items
       //- a.panel-block.is-active
       //-   span.panel-icon

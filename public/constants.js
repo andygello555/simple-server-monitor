@@ -33,6 +33,7 @@ define("LOG_BLACKLIST", ['/etc/passwd'])
 define("PS_HEADERS", ['pid', 'user', '%mem', '%cpu', 'command'])
 define("DF_HEADERS", ['filesystem', 'size', 'used', 'available', 'usedPercent', 'mounted'])
 define("DU_HEADERS", ['size', 'directory'])
+define("LIST_UNITS_HEADERS", ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'])
 
 // All commands that are used to scrape system info
 define("COMMANDS", {
@@ -44,8 +45,8 @@ define("COMMANDS", {
   DU: 'du -kx --max-depth=1 %s 2>/dev/null | head -n -1',
   CHECK_READABLE: 'test -r %s -a %s',
   TAIL_OPTIONS: ['-f', '-n'],
-  SERVICE_LIST: 'systemctl list-units --type=service --no-pager --all | tail -n +2 | head -n -7',
-  SERVICE_TAIL_LOG: 'journalctl -u %s -b -f',
+  SERVICE_LIST: 'systemctl list-units --type=service --no-pager --all | tail -n +2 | head -n -7 | sed "s/\\xe2\\x97\\x8f//g"',
+  SERVICE_TAIL_LOG: ['journalctl', ['-u', '%s', '-b', '-f']],
   SERVICE_GET_PID: 'systemctl show --property MainPID --value %s',
 })
 
@@ -65,6 +66,7 @@ define('UPDATES', {
   CRONS: {
     PROCESSES: '0 */1 * * * *',   // Every minute
     PARTITIONS: '0 */30 * * * *',  // Every 30 minutes
+    SERVICES: '0 */30 * * * *',  // Every 30 minutes
   },
   CHARTS: {
     PROCESSES: 30,
