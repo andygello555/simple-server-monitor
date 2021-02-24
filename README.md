@@ -57,6 +57,12 @@ Contains most of the graphs for process resource usage, as well as overviews for
 
 Provides the ability to tail files on the host machine. The location and parameters of the tail persist as they are stored in the database. **Log files update in real time using web-sockets**.
 
+### Systemd
+
+Lists all services that are **loaded in memory** which can be filtered by _loaded-ness_, _active-ness_ and _running-ness_ as well as searched for using the real time search bar.<br/>
+
+When individual services are clicked on this will open the **service detail view**, which provides a realtime log using **journalctl** and **web-sockets**. Along with an option to be **taken to the process which is bound to that service** (if it exists in the database/is running).
+
 ## FAQ
 
 **Q. Why no CDNs?**<br/>
